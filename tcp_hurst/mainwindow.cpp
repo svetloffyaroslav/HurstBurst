@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include<QDebug>
 #include<QFileDialog>
+#include "math.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -10,28 +11,16 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     TcpSocket_One= new QTcpSocket(this);         // создается сокет
     Timer_BetweenPacket = new QTimer(this);
-
-
-
     ui->lineEdit_IPAdres->setInputMask("000.000.000.000;");
-
-
-
     connect(TcpSocket_One,  SIGNAL (connected()),    SLOT(slot_TcpSocket_OneConnected()));                                           // соединение сигнала connected() - который вызывается при создании соединения со слотом выводящим об этом информацию
     connect(TcpSocket_One,  SIGNAL (readyRead()),    SLOT(slot_TcpSocket_OneReadyRead()));                                          //  сокет отправляет сигнал readyRead() при готовности предоставить данные для чтения
     connect(TcpSocket_One, SIGNAL(disconnected()),  SLOT(slot_TcpSocket_OneDisconnected()));                            //
     connect(TcpSocket_One, SIGNAL(error(QAbstractSocket::SocketError)),
              this,                                  SLOT(slot_TcpSocket_OneError(QAbstractSocket::SocketError))       //
             );
-
     connect(Timer_BetweenPacket,SIGNAL(timeout()),SLOT(slot_timeoutTimer_BetweenPacket()));
-
-
     i_numberPacket = -1;
-
-
 }
-
 
 void MainWindow::slot_TcpSocket_OneConnected()
 {
@@ -229,4 +218,46 @@ void MainWindow::on_action_SaveTime_triggered()
 
     }
 
+}
+
+void MainWindow::on_pushButton_Pareto_clicked()
+{
+
+    ParetoSequance(ui->lineEdit_Xmin->text().toDouble(),ui->lineEdit_Xmax->text().toDouble(),ui->lineEdit_Pareto_a->text().toDouble(), ui->lineEdit_Pareto_k->text().toDouble());
+}
+
+void MainWindow::ParetoSequance(double Xmin, double Xmax, double a, double k)
+{
+    int i_xy_size = (int) Xmax- Xmin;
+    QVector <double> wx(i_xy_size),wy(i_xy_size);
+
+   double x = Xmin;
+   for(int i = 0;i<i_xy_size;i++)
+   {
+       x++;
+       wy[i] = a*pow(k,a)/pow(x,a+1);           // распределение Парето
+
+//       wy[i] = a*pow(k,a)/pow(x,a+1);
+//       // wy [(int)x]= 1.0-pow(k/x,a);
+      wx[i] = (double)i;
+    }
+
+    double minY = wy[0],maxY = wy[0];                                           // расчет максимального и минимального значения для вектора y
+    for(int i = 0;i<wy.size();i++)                                              // Снова прогоняем цикл сравнивая значения
+     {
+        if (wy[i]<minY) minY = wy[i];                                           // устанавливая минимальное
+        if (wy[i]>maxY) maxY = wy[i];                                           //  и устанавливая максимальное
+     }
+
+      ui->widget_graph->clearGraphs();                                           // очищаем график
+      ui->widget_graph->addGraph();                                              // добавляем новый график
+      ui->widget_graph->xAxis->setRange(wx[0],wx[wx.size()-1]);                  // Устанавливаем диапазон - от Xo до Xмах
+      ui->widget_graph->yAxis->setRange(minY,maxY);                              // Устанавливает диапазон  от Ymin до Ymax
+     ui->widget_graph->graph(0)->setData(wx,wy);                                // Устанавливаем данные
+////   ui->widget_GraphImpulse->xAxis->setLabel("x");                             // легенда
+////   ui->widget_GraphImpulse->yAxis->setLabel("y");
+     ui->widget_graph->replot();                                                // строим
+
+     wx.clear();                                                                // очищаем
+     wy.clear();
 }

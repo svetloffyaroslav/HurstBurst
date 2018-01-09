@@ -14,6 +14,7 @@
 #include <QHostInfo>
 #include <QHostAddress>
 #include <QNetworkAddressEntry>
+#include<QVector>
 
 namespace Ui
 {
@@ -30,27 +31,20 @@ public:
 
     int i_numberPacket;
     int i_previousTime;
-
-
     QByteArray ByteArray_Send;
     bool b_firstSend;
-
-
 
 private slots:
     void slot_TcpSocket_OneConnected();
     void slot_TcpSocket_OneReadyRead();
     void slot_TcpSocket_OneDisconnected();
     void slot_TcpSocket_OneError(QAbstractSocket::SocketError error_One);
-
     void on_pushButton_ConnectOrDisconnect_toggled(bool checked);  
-
     void on_pushButton_Transmit_toggled(bool checked);
     void slot_timeoutTimer_BetweenPacket();
-
-
-
     void on_action_SaveTime_triggered();
+    void on_pushButton_Pareto_clicked();
+    void ParetoSequance(double Xmin, double Xmax, double a, double k);
 
 private:
     Ui::MainWindow*     ui;
