@@ -4,6 +4,7 @@
 #include<QFileDialog>
 #include "math.h"
 
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -20,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
             );
     connect(Timer_BetweenPacket,SIGNAL(timeout()),SLOT(slot_timeoutTimer_BetweenPacket()));
     i_numberPacket = -1;
+
 }
 
 void MainWindow::slot_TcpSocket_OneConnected()
@@ -234,8 +236,11 @@ void MainWindow::ParetoSequance(double Xmin, double Xmax, double a, double k)
    double x = Xmin;
    for(int i = 0;i<i_xy_size;i++)
    {
-       x++;
-       wy[i] = a*pow(k,a)/pow(x,a+1);           // распределение Парето
+     x++;
+     wy[i] = a*pow(k,a)/pow(x,a+1);           // функция распределение Парето
+//      double r = ((double) rand() / (RAND_MAX)) + 1;
+//       wy[i]  = k/pow(1.0-r,1.0/a);
+
 
 //       wy[i] = a*pow(k,a)/pow(x,a+1);
 //       // wy [(int)x]= 1.0-pow(k/x,a);
@@ -253,7 +258,7 @@ void MainWindow::ParetoSequance(double Xmin, double Xmax, double a, double k)
       ui->widget_graph->addGraph();                                              // добавляем новый график
       ui->widget_graph->xAxis->setRange(wx[0],wx[wx.size()-1]);                  // Устанавливаем диапазон - от Xo до Xмах
       ui->widget_graph->yAxis->setRange(minY,maxY);                              // Устанавливает диапазон  от Ymin до Ymax
-     ui->widget_graph->graph(0)->setData(wx,wy);                                // Устанавливаем данные
+     ui->widget_graph->graph(0)->setData(wx,wy);                                 // Устанавливаем данные
 ////   ui->widget_GraphImpulse->xAxis->setLabel("x");                             // легенда
 ////   ui->widget_GraphImpulse->yAxis->setLabel("y");
      ui->widget_graph->replot();                                                // строим
