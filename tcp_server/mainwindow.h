@@ -34,6 +34,7 @@ private:
     Ui::MainWindow *ui;
     QTcpServer* TcpServer_One;
     QTcpSocket* TcpServerSocket_One;
+    QFile *file;
 
 };
 
