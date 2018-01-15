@@ -1,8 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include<QDebug>
-#include<QFileDialog>
-#include "math.h"
+
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -10,45 +8,46 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    TcpSocket_One= new QTcpSocket(this);         // создается сокет
-    Timer_BetweenPacket = new QTimer(this);
+    TcpSocket_One= new QTcpSocket(this);                                                                        // создается сокет
+    Timer_BetweenPacket = new QTimer(this);                                                                     // инициализируется класс таймера
     ui->lineEdit_IPAdres->setInputMask("000.000.000.000;");
-    connect(TcpSocket_One,  SIGNAL (connected()),    SLOT(slot_TcpSocket_OneConnected()));                                           // соединение сигнала connected() - который вызывается при создании соединения со слотом выводящим об этом информацию
-    connect(TcpSocket_One,  SIGNAL (readyRead()),    SLOT(slot_TcpSocket_OneReadyRead()));                                          //  сокет отправляет сигнал readyRead() при готовности предоставить данные для чтения
-    connect(TcpSocket_One, SIGNAL(disconnected()),  SLOT(slot_TcpSocket_OneDisconnected()));                            //
+    connect(TcpSocket_One,  SIGNAL (connected()),    SLOT(slot_TcpSocket_OneConnected()));                      // connected() -  вызывается при создании соединения c сервером;
+    connect(TcpSocket_One,  SIGNAL (readyRead()),    SLOT(slot_TcpSocket_OneReadyRead()));                      // readyRead() при готовности предоставить данные для чтения;
+    connect(TcpSocket_One, SIGNAL(disconnected()),  SLOT(slot_TcpSocket_OneDisconnected()));                    // disconnected  - при отключении сокета от сервера;
     connect(TcpSocket_One, SIGNAL(error(QAbstractSocket::SocketError)),
-             this,                                  SLOT(slot_TcpSocket_OneError(QAbstractSocket::SocketError))       //
+             this,                                  SLOT(slot_TcpSocket_OneError(QAbstractSocket::SocketError))  // error(QAbstractSocket::SocketError) - при возникновении ошибки
             );
-    connect(Timer_BetweenPacket,SIGNAL(timeout()),SLOT(slot_timeoutTimer_BetweenPacket()));
-    i_numberPacket = -1;
-
+    connect(Timer_BetweenPacket,SIGNAL(timeout()),SLOT(slot_timeoutTimer_BetweenPacket()));                       // подключаем таймер к слоту
+    i_numberPacket = 0;
 }
-
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Слот, срабатывающий при подключении к серверу~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::slot_TcpSocket_OneConnected()
 {
-    ui->statusBar->showMessage("Подключился",3000);
-
-    ui->groupBox_TimeRow->setEnabled(true);
-    ui->groupBox_Transmission->setEnabled(true);
-
+    ui->statusBar->showMessage("Подключился",3000);                                     // вывод информации в строку статуса на 3 с
+    ui->groupBox_TimeRow->setEnabled(true);                                             // группа элементов "Временной ряд" - становится доступной
+    ui->groupBox_Transmission->setEnabled(true);                                        // группа элементов передача, становится доступным
 }
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Слот, срабатывающий при поступлении данных от сервера~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::slot_TcpSocket_OneReadyRead()
 {
     qDebug()<<"Готовность к чтению";
 }
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Слот, срабатывающий при Отключении от сервера~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::slot_TcpSocket_OneDisconnected()
 {
-     ui->statusBar->showMessage("Отключился",3000);
+    ui->statusBar->showMessage("Отключился",3000);
     ui->groupBox_TimeRow->setEnabled(false);
     ui->groupBox_Transmission->setEnabled(false);
     Timer_BetweenPacket->stop();
 }
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
-
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Слот, срабатывающий при Возникновении ошибки~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::slot_TcpSocket_OneError(QAbstractSocket::SocketError error_One)
 {
     QString strSystemError =
@@ -62,14 +61,16 @@ void MainWindow::slot_TcpSocket_OneError(QAbstractSocket::SocketError error_One)
                     );
     ui->statusBar->showMessage(strSystemError,3000);
 }
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
-
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Удаление интерфеса при закрытии приложения~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 MainWindow::~MainWindow()
 {
     delete ui;
 }
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 void MainWindow::on_pushButton_ConnectOrDisconnect_toggled(bool checked)
 {
@@ -81,7 +82,6 @@ void MainWindow::on_pushButton_ConnectOrDisconnect_toggled(bool checked)
 
         QString string_IPAdress = ui->lineEdit_IPAdres->text();
         quint16 string_Port = ui->lineEdit_Port->text().toUShort();
-
         QHostAddress address(string_IPAdress);
         TcpSocket_One -> connectToHost (address,string_Port);
 
@@ -93,176 +93,115 @@ void MainWindow::on_pushButton_ConnectOrDisconnect_toggled(bool checked)
         ui->pushButton_ConnectOrDisconnect->setText("Подключить");
     }
 }
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
 void MainWindow::on_pushButton_Transmit_toggled(bool checked)
 {
+    ui->progressBar->setValue(0);
+    StartTimerDelta(0);
+    i_numberPacket = 0;
+    ByteArray_Send.clear();
+    ByteArray_Send.resize(ui->spinBox_SizeOfPacket->value());
+    ByteArray_Send.fill('x');
 
-    if(checked)
+    ui->progressBar->setMaximum(ui->spinBox_parametr_N->value());
+}
+
+void MainWindow::StartTimerDelta(int i)
+{
+
+    if(i>ui->spinBox_parametr_N->value())
     {
-        Timer_BetweenPacket->start(ui->spinBox_DelayTime->value());
-        ui->progressBar->setValue(0);
-        i_numberPacket =0;
-
-        ui->pushButton_Transmit->setText("Остановить");
-          b_firstSend = true;
+        Timer_BetweenPacket->stop();
     }
     else
     {
-        Timer_BetweenPacket->stop();
-        ui->pushButton_Transmit->setText("Передать");
-        b_firstSend = false;
-        TcpSocket_One->flush();
-    }
-    ui->progressBar->setMaximum(ui->spinBox_CountOfSize->value());
+        Timer_BetweenPacket->start((int)(vector_DeltaTime[i]));
 
+    }
 }
 
 void MainWindow::slot_timeoutTimer_BetweenPacket()
 {
-    if(b_firstSend)
+    i_numberPacket++;
+    if(i_numberPacket<ui->spinBox_parametr_N->value())
     {
-
-        int i_SizeOfPacket = ui->spinBox_SizeOfPacket->value();
-        int i_CountOfSize = ui->spinBox_CountOfSize->value();
-
-
-        QByteArray FirstFrame;
-        QDataStream stream_ToFirstFrame(&FirstFrame,QIODevice::WriteOnly);
-        stream_ToFirstFrame.setByteOrder(QDataStream::LittleEndian);
-        stream_ToFirstFrame.setFloatingPointPrecision(QDataStream::SinglePrecision);
-        stream_ToFirstFrame<<(quint8)0x42<<i_SizeOfPacket<<i_CountOfSize;
-
-
-        qDebug()<<"soo"<<FirstFrame.toHex();
-
-        TcpSocket_One->write(FirstFrame);
+        TcpSocket_One->write(ByteArray_Send);
         TcpSocket_One->flush();
-
-        b_firstSend =false;
-
+        StartTimerDelta(i_numberPacket);
 
     }
     else
     {
-        i_numberPacket++;
-        ui-> tableWidget ->setRowCount(i_numberPacket);
-
-        ByteArray_Send.clear();
-
-        ui->progressBar->setValue(i_numberPacket);
-        ByteArray_Send.resize(ui->spinBox_SizeOfPacket->value());
-        ByteArray_Send.fill('x');
-
-        if(i_numberPacket==1)
-        {
-            QTableWidgetItem *newItem = new QTableWidgetItem();
-            newItem->setText(QString::number(0));
-            newItem->setTextAlignment(Qt::AlignHCenter);
-            ui->tableWidget->setItem(i_numberPacket-1,0,newItem);
-            i_previousTime = QTime::currentTime().msecsSinceStartOfDay();
-
-
-            TcpSocket_One->write(ByteArray_Send);
-            TcpSocket_One->flush();
-        }
-        else
-        {
-
-
-                float f_time = (float)(QTime::currentTime().msecsSinceStartOfDay()-i_previousTime)/1000;
-                QTableWidgetItem *newItem = new QTableWidgetItem();
-                newItem->setText(QString::number(f_time));
-                newItem->setTextAlignment(Qt::AlignHCenter);
-                ui->tableWidget->setItem(i_numberPacket-1,0,newItem);
-                ui->tableWidget->setCurrentCell(i_numberPacket-1,0);
-
-                i_previousTime = QTime::currentTime().msecsSinceStartOfDay();
-
-                TcpSocket_One->write(ByteArray_Send);
-                TcpSocket_One->flush();
-
-        if(i_numberPacket>ui->spinBox_CountOfSize->value()-1)
-        {
-            Timer_BetweenPacket       -> stop();
-            ui -> pushButton_Transmit -> setChecked(false);
-            b_firstSend = true;
-            i_numberPacket = 0;
-        }
-      }
+       qDebug()<<"last packet";
+       Timer_BetweenPacket->stop();
     }
 }
 
 void MainWindow::on_action_SaveTime_triggered()
 {
 
-    QString fileName  = QFileDialog::getSaveFileName(this,tr("Сохранить отправленные сообщения КС"),"/home/Time_Client",tr("Текстовый файл(*.txt)"));              // получай имя файла в строковую переменную
-    QFile  file(fileName);
-    if(!file.open(QIODevice::WriteOnly|QFile::WriteOnly))                                                           // если файл не получается открыть для записи
-    {
-          QMessageBox::warning(this,"Файл не сохранен",tr("Ошибка в сохранении файла: %1.").arg(file.errorString()));                                       // показывай сообщение об ошибке
-    }
-    else
-    {
-        QTextStream data( &file );
-        QStringList strList;                // лист из стринговых переменных
 
-
-
-        for( int r = 0; r < ui->tableWidget->rowCount(); ++r )
-        {
-                    strList.clear();
-                    strList<<"\" "+ui->tableWidget->item( r, 0 )->text()+"\" " ;                                                                           // цикл от нуля до максимального количества строк
-                     data << strList.join( ";" ) << "\n";
-        }
-
-
-    }
 
 }
 
-void MainWindow::on_pushButton_Pareto_clicked()
+
+
+void MainWindow::on_pushButton_GenPareto_clicked()
 {
 
-    ParetoSequance(ui->lineEdit_Xmin->text().toDouble(),ui->lineEdit_Xmax->text().toDouble(),ui->lineEdit_Pareto_a->text().toDouble(), ui->lineEdit_Pareto_k->text().toDouble());
-}
+    vector_DeltaTime.clear();
 
-void MainWindow::ParetoSequance(double Xmin, double Xmax, double a, double k)
-{
-    int i_xy_size = (int) Xmax- Xmin;
-    QVector <double> wx(i_xy_size),wy(i_xy_size);
-
-   double x = Xmin;
-   for(int i = 0;i<i_xy_size;i++)
-   {
-     x++;
-     wy[i] = a*pow(k,a)/pow(x,a+1);           // функция распределение Парето
-//      double r = ((double) rand() / (RAND_MAX)) + 1;
-//       wy[i]  = k/pow(1.0-r,1.0/a);
+    float f_a = ui->lineEdit_parametr_a->text().toFloat();
+    float f_k = ui->lineEdit_parametr_k->text().toFloat();
+    int N = ui->spinBox_parametr_N->value();
 
 
-//       wy[i] = a*pow(k,a)/pow(x,a+1);
-//       // wy [(int)x]= 1.0-pow(k/x,a);
-      wx[i] = (double)i;
+    vector_DeltaTime.resize(N);
+
+
+    char* outname = "HurstBurst_pareto.txt";  // имя тектового файла, куда попадут значения
+
+    FILE* OUT;
+    OUT = fopen(outname, "wt");
+    const int range_from = 0;
+    const int range_to = 1;
+
+    std::random_device                      rand_dev;
+    std::mt19937                            generator(rand_dev());
+    std::uniform_real_distribution<float>   distr(range_from, range_to);
+
+
+    for(int s= 0;s<N;s++)
+    {
+        // float r = (float)rand()/RAND_MAX;
+        float r = distr(generator);
+        float y = f_k/pow(1-r,1.0/f_a);
+        vector_DeltaTime[s] = y;
+
+        fprintf(OUT, "%f\n",y);
     }
+    fclose(OUT);
 
-    double minY = wy[0],maxY = wy[0];                                           // расчет максимального и минимального значения для вектора y
-    for(int i = 0;i<wy.size();i++)                                              // Снова прогоняем цикл сравнивая значения
-     {
-        if (wy[i]<minY) minY = wy[i];                                           // устанавливая минимальное
-        if (wy[i]>maxY) maxY = wy[i];                                           //  и устанавливая максимальное
-     }
+    ui-> tableWidget ->setRowCount(N);
 
-      ui->widget_graph->clearGraphs();                                           // очищаем график
-      ui->widget_graph->addGraph();                                              // добавляем новый график
-      ui->widget_graph->xAxis->setRange(wx[0],wx[wx.size()-1]);                  // Устанавливаем диапазон - от Xo до Xмах
-      ui->widget_graph->yAxis->setRange(minY,maxY);                              // Устанавливает диапазон  от Ymin до Ymax
-     ui->widget_graph->graph(0)->setData(wx,wy);                                 // Устанавливаем данные
-////   ui->widget_GraphImpulse->xAxis->setLabel("x");                             // легенда
-////   ui->widget_GraphImpulse->yAxis->setLabel("y");
-     ui->widget_graph->replot();                                                // строим
+  QTableWidgetItem *newItem = new QTableWidgetItem();
+  newItem->setText(QString::number(0));
+  newItem->setTextAlignment(Qt::AlignHCenter);
+  ui->tableWidget->setItem(0,0,newItem);
 
-     wx.clear();                                                                // очищаем
-     wy.clear();
+  int i_currentRow = 0;
+   for(int i=0;i<N;i++)
+    {
+      i_currentRow++;
+      QTableWidgetItem *newItem = new QTableWidgetItem();
+      newItem->setText(QString::number(vector_DeltaTime[i]));
+      newItem->setTextAlignment(Qt::AlignHCenter);
+      ui->tableWidget->setItem(i_currentRow,0,newItem);
+      ui->tableWidget->setCurrentCell(i,0);
+    }
 }
+
+

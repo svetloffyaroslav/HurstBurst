@@ -73,82 +73,85 @@ void MainWindow::slot_TcpServer_OneClientIsDisconnect()
 void MainWindow::slot_TcpServer_OneClientReadyRead()
 {
     i_numberOfPackets++;
-    QByteArray ByteArray_OneFrame;
-    ByteArray_OneFrame.clear();
-    ByteArray_OneFrame= TcpServerSocket_One->readAll();
 
-    if(ByteArray_OneFrame.size()==9)
-    {
-           quint8 q8_check;
-           int i_sizeOfPacket;
-           int i_countOfPacket;
+    qDebug()<<"Пришло пакетов"<<i_numberOfPackets;
 
-           QDataStream stream_OneFrame(&ByteArray_OneFrame,QIODevice::ReadOnly);
-           stream_OneFrame.setByteOrder(QDataStream::LittleEndian);
-           stream_OneFrame.setFloatingPointPrecision(QDataStream::SinglePrecision);
-           stream_OneFrame>>q8_check>>i_sizeOfPacket>>i_countOfPacket;
+//    QByteArray ByteArray_OneFrame;
+//    ByteArray_OneFrame.clear();
+//    ByteArray_OneFrame= TcpServerSocket_One->readAll();
 
+//    if(ByteArray_OneFrame.size()==9)
+//    {
+//           quint8 q8_check;
+//           int i_sizeOfPacket;
+//           int i_countOfPacket;
 
-
-           if(q8_check==0x42)
-           {
-                ui->progressBar->setValue(0);
-                ui->tableWidget->setRowCount(0);
-                ui->label_CountOfPacket->setText(QString::number(i_countOfPacket));
-                ui->label_sizeOfPacket->setText(QString::number(i_sizeOfPacket));
-                ui->progressBar->setMaximum(i_countOfPacket);
-                i_numberOfTruePackets = 0;
-                f_AvirTime = 0.0;
-           }
-           else
-           {
-              return;
-           }
-
-     }
-    else
-    {
-                i_numberOfTruePackets++;
-                ui->progressBar->setValue(i_numberOfTruePackets);
-                ui->lcdNumber->display(i_numberOfTruePackets);
-                if(i_numberOfTruePackets==1)
-                {
-
-                            qDebug()<<"i_numberOfTruePackets"<<i_numberOfTruePackets;
-                             ui->tableWidget->setRowCount(i_numberOfTruePackets);
-                            QTableWidgetItem *newItem = new QTableWidgetItem();
-                            newItem->setText(QString::number(0));
-                            newItem->setTextAlignment(Qt::AlignHCenter);
-                            ui->tableWidget->setItem(i_numberOfTruePackets-1,0,newItem);
-                            i_previousTime = QTime::currentTime().msecsSinceStartOfDay();
-               }
-               else
-               {
-                            float f_time = (float)(QTime::currentTime().msecsSinceStartOfDay()-i_previousTime)/1000;
-
-                            f_AvirTime=f_AvirTime+f_time;
+//           QDataStream stream_OneFrame(&ByteArray_OneFrame,QIODevice::ReadOnly);
+//           stream_OneFrame.setByteOrder(QDataStream::LittleEndian);
+//           stream_OneFrame.setFloatingPointPrecision(QDataStream::SinglePrecision);
+//           stream_OneFrame>>q8_check>>i_sizeOfPacket>>i_countOfPacket;
 
 
-                            float Av = f_AvirTime/((float)i_numberOfTruePackets-1.0);
 
-                            ui->label_AvirageTime->setText(QString::number(Av));
+//           if(q8_check==0x42)
+//           {
+//                ui->progressBar->setValue(0);
+//                ui->tableWidget->setRowCount(0);
+//                ui->label_CountOfPacket->setText(QString::number(i_countOfPacket));
+//                ui->label_sizeOfPacket->setText(QString::number(i_sizeOfPacket));
+//                ui->progressBar->setMaximum(i_countOfPacket);
+//                i_numberOfTruePackets = 0;
+//                f_AvirTime = 0.0;
+//           }
+//           else
+//           {
+//              return;
+//           }
 
-                            ui->tableWidget->setRowCount(i_numberOfTruePackets);
-                            QTableWidgetItem *newItem = new QTableWidgetItem();
-                            newItem->setText(QString::number(f_time));
-                            newItem->setTextAlignment(Qt::AlignHCenter);
-                            ui->tableWidget->setItem(i_numberOfTruePackets-1,0,newItem);
-                            ui->tableWidget->setCurrentCell(i_numberOfTruePackets-1,0);
-                            i_previousTime = QTime::currentTime().msecsSinceStartOfDay();
+//     }
+//    else
+//    {
+//                i_numberOfTruePackets++;
+//                ui->progressBar->setValue(i_numberOfTruePackets);
+//                ui->lcdNumber->display(i_numberOfTruePackets);
+//                if(i_numberOfTruePackets==1)
+//                {
 
-                            if(i_numberOfTruePackets == ui->progressBar->maximum())
-                            {
+//                            qDebug()<<"i_numberOfTruePackets"<<i_numberOfTruePackets;
+//                             ui->tableWidget->setRowCount(i_numberOfTruePackets);
+//                            QTableWidgetItem *newItem = new QTableWidgetItem();
+//                            newItem->setText(QString::number(0));
+//                            newItem->setTextAlignment(Qt::AlignHCenter);
+//                            ui->tableWidget->setItem(i_numberOfTruePackets-1,0,newItem);
+//                            i_previousTime = QTime::currentTime().msecsSinceStartOfDay();
+//               }
+//               else
+//               {
+//                            float f_time = (float)(QTime::currentTime().msecsSinceStartOfDay()-i_previousTime)/1000;
 
-                                i_numberOfTruePackets=0;
-                                i_numberOfPackets = 0;
-                            }
-               }
-        }
+//                            f_AvirTime=f_AvirTime+f_time;
+
+
+//                            float Av = f_AvirTime/((float)i_numberOfTruePackets-1.0);
+
+//                            ui->label_AvirageTime->setText(QString::number(Av));
+
+//                            ui->tableWidget->setRowCount(i_numberOfTruePackets);
+//                            QTableWidgetItem *newItem = new QTableWidgetItem();
+//                            newItem->setText(QString::number(f_time));
+//                            newItem->setTextAlignment(Qt::AlignHCenter);
+//                            ui->tableWidget->setItem(i_numberOfTruePackets-1,0,newItem);
+//                            ui->tableWidget->setCurrentCell(i_numberOfTruePackets-1,0);
+//                            i_previousTime = QTime::currentTime().msecsSinceStartOfDay();
+
+//                            if(i_numberOfTruePackets == ui->progressBar->maximum())
+//                            {
+
+//                                i_numberOfTruePackets=0;
+//                                i_numberOfPackets = 0;
+//                            }
+//               }
+//        }
 }
 
 void MainWindow::on_action_TimeServer_triggered()

@@ -15,6 +15,13 @@
 #include <QHostAddress>
 #include <QNetworkAddressEntry>
 #include<QVector>
+#include<QDebug>
+#include<QFileDialog>
+#include "math.h"
+#include <random>
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
 
 namespace Ui
 {
@@ -34,6 +41,8 @@ public:
     QByteArray ByteArray_Send;
     bool b_firstSend;
 
+    QVector<float> vector_DeltaTime;
+
 private slots:
     void slot_TcpSocket_OneConnected();
     void slot_TcpSocket_OneReadyRead();
@@ -43,8 +52,13 @@ private slots:
     void on_pushButton_Transmit_toggled(bool checked);
     void slot_timeoutTimer_BetweenPacket();
     void on_action_SaveTime_triggered();
-    void on_pushButton_Pareto_clicked();
-    void ParetoSequance(double Xmin, double Xmax, double a, double k);
+
+    void StartTimerDelta(int i);
+
+
+    void on_pushButton_GenPareto_clicked();
+
+
 
 private:
     Ui::MainWindow*     ui;
