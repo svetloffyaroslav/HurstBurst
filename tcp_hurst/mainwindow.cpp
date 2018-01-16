@@ -153,6 +153,7 @@ void MainWindow::on_action_SaveTime_triggered()
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Кнопка "ГЕНЕРАЦИЯ"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::on_pushButton_GenPareto_clicked()
 {
+    ui-> tableWidget ->setRowCount(0);
     vector_DeltaTime.clear();
     float f_a = ui->lineEdit_parametr_a->text().toFloat();
     float f_k = ui->lineEdit_parametr_k->text().toFloat();
@@ -212,3 +213,64 @@ void MainWindow::on_pushButton_GenPareto_clicked()
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+
+void MainWindow::on_pushButton_GenExp_clicked()
+{
+     ui-> tableWidget ->setRowCount(0);
+     vector_DeltaTime.clear();
+     float f_L = ui->lineEdit_parametr_L->text().toFloat();
+    int N = ui->spinBox_parametr_N->value();
+
+     vector_DeltaTime.resize(N);
+     char* outname = "HurstBurst_exp.txt";  // имя тектового файла, куда попадут значения
+
+     FILE* OUT;
+     OUT = fopen(outname, "wt");
+     const int range_from = 0;
+     const int range_to = 1;
+
+     std::random_device                      rand_dev;
+     std::mt19937                            generator(rand_dev());
+     std::uniform_real_distribution<float>   distr(range_from, range_to);
+
+     float f_tens = 0;
+     if(ui->radioButton_1X_exp->isChecked())
+     {
+         f_tens = 1.0;
+     }
+     else if(ui->radioButton_X10_exp->isChecked())
+     {
+         f_tens = 10.0;
+     }
+     else if(ui->radioButton_X100_exp->isChecked())
+     {
+         f_tens = 100.0;
+     }
+
+     for(int s= 0;s<N;s++)
+     {
+         // float r = (float)rand()/RAND_MAX;
+         float r = distr(generator);
+         float y =  - log(r)/f_L;
+         vector_DeltaTime[s] = y*f_tens;
+         fprintf(OUT, "%f\n",y);
+     }
+     fclose(OUT);
+     ui-> tableWidget ->setRowCount(N);
+
+     QTableWidgetItem *newItem = new QTableWidgetItem();
+     newItem->setText(QString::number(0));
+     newItem->setTextAlignment(Qt::AlignHCenter);
+     ui->tableWidget->setItem(0,0,newItem);
+
+     int i_currentRow = 0;
+     for(int i=0;i<N;i++)
+       {
+         i_currentRow++;
+         QTableWidgetItem *newItem = new QTableWidgetItem();
+         newItem->setText(QString::number(vector_DeltaTime[i]));
+         newItem->setTextAlignment(Qt::AlignHCenter);
+         ui->tableWidget->setItem(i_currentRow,0,newItem);
+         ui->tableWidget->setCurrentCell(i,0);
+       }
+}
