@@ -30,6 +30,8 @@ private slots:
 
     void on_action_TimeServer_triggered();
 
+    void on_pushButton_Clear_clicked();
+
 private:
     Ui::MainWindow *ui;
     QTcpServer* TcpServer_One;

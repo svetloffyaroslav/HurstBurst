@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     f_AvirTime = 0.0;
 
     file = new QFile("server_par.txt");
+
 }
 
 MainWindow::~MainWindow()
@@ -40,7 +41,7 @@ void MainWindow::on_pushButton_ServerStart_clicked()
     {
         if(address.protocol()==QAbstractSocket::IPv4Protocol&&address!= QHostAddress::LocalHost)
         {
-            ui->label_IP_Adress->setText(address.toString());
+            ui->plainTextEdit_IPAdrr->insertPlainText(address.toString()+"\n");
         }
     }
     connect(TcpServer_One, SIGNAL(newConnection()),
@@ -70,13 +71,11 @@ void MainWindow::slot_TcpServer_OneClientIsDisconnect()
 }
 
 
-
-
-
 void MainWindow::slot_TcpServer_OneClientReadyRead()
 {
     i_numberOfPackets++;
 
+   ui->lcdNumber->display(i_numberOfPackets);
 
    if(i_numberOfPackets ==1)
     {
@@ -90,9 +89,7 @@ void MainWindow::slot_TcpServer_OneClientReadyRead()
          int i_CurrentTime = QTime::currentTime().msecsSinceStartOfDay();
          int i_deltaTime = i_CurrentTime-i_previousTime;
          i_previousTime = i_CurrentTime;
-
          ui->textEdit->insertPlainText(QString::number(i_deltaTime)+"\n");
-
 
     }
 }
@@ -119,4 +116,12 @@ void MainWindow::on_action_TimeServer_triggered()
 //                     data << strList.join( ";" ) << "\n";
 //        }
 //    }
+}
+
+void MainWindow::on_pushButton_Clear_clicked()
+{
+    ui->textEdit->clear();
+    ui->lcdNumber->display(0);
+    i_numberOfPackets = 0;
+
 }

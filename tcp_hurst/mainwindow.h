@@ -40,6 +40,7 @@ public:
     int i_previousTime;
     QByteArray ByteArray_Send;
     bool b_firstSend;
+    int i_line;
 
     QVector<float> vector_DeltaTime;
 
@@ -49,7 +50,7 @@ private slots:
     void slot_TcpSocket_OneDisconnected();
     void slot_TcpSocket_OneError(QAbstractSocket::SocketError error_One);
     void on_pushButton_ConnectOrDisconnect_toggled(bool checked);  
-    void on_pushButton_Transmit_toggled(bool checked);
+
     void slot_timeoutTimer_BetweenPacket();
     void on_action_SaveTime_triggered();
 
@@ -61,6 +62,14 @@ private slots:
 
 
     void on_pushButton_GenExp_clicked();
+
+    void GenerateTime(int i_WhatGen);
+
+    void on_pushButton_DownloadFromTXT_clicked();
+
+    void on_pushButton_Transmit_clicked();
+
+    void sendToSocket();
 
 private:
     Ui::MainWindow*     ui;

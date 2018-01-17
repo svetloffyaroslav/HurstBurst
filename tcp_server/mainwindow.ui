@@ -23,66 +23,49 @@
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
-      <layout class="QGridLayout" name="gridLayout_4">
+      <layout class="QGridLayout" name="gridLayout_3">
        <item row="0" column="0">
-        <layout class="QGridLayout" name="gridLayout_3">
+        <layout class="QGridLayout" name="gridLayout">
          <item row="0" column="0">
-          <layout class="QGridLayout" name="gridLayout_2">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_3">
-             <property name="text">
-              <string>IP адрес:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>Порт:</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>IP адреса:</string>
+           </property>
+          </widget>
          </item>
          <item row="0" column="1">
-          <layout class="QGridLayout" name="gridLayout">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_IP_Adress">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>21</height>
-              </size>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Box</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Raised</enum>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLineEdit" name="lineEdit_Port">
-             <property name="text">
-              <string>20000</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-          </layout>
+          <widget class="QPlainTextEdit" name="plainTextEdit_IPAdrr"/>
          </item>
         </layout>
        </item>
        <item row="1" column="0">
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Порт:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="lineEdit_Port">
+           <property name="maximumSize">
+            <size>
+             <width>157</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>20000</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
         <widget class="QPushButton" name="pushButton_ServerStart">
          <property name="text">
           <string>Создать сервер</string>
@@ -101,7 +84,7 @@
        <bool>true</bool>
       </property>
       <property name="title">
-       <string>Временной ряд</string>
+       <string>Временной ряд,мсек</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
@@ -223,6 +206,13 @@
           </layout>
          </item>
         </layout>
+       </item>
+       <item row="1" column="0">
+        <widget class="QPushButton" name="pushButton_Clear">
+         <property name="text">
+          <string>ОЧИСТИТЬ</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
