@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QtNetwork>
 #include <QHostAddress>
+#include<QElapsedTimer>
 
 namespace Ui {
 class MainWindow;
@@ -18,8 +19,11 @@ public:
     ~MainWindow();
     int i_numberOfPackets;
     int i_numberOfTruePackets;
-    int i_previousTime;
+    qint64 i_previousTime;
     float f_AvirTime;
+
+
+      QVector<quint64> vector_DeltaTime;
 public slots:
      virtual void slotTcpServer_OneConnection();
 private slots:
@@ -32,11 +36,14 @@ private slots:
 
     void on_pushButton_Clear_clicked();
 
+    void on_pushButton_Output_clicked();
+
 private:
     Ui::MainWindow *ui;
     QTcpServer* TcpServer_One;
     QTcpSocket* TcpServerSocket_One;
     QFile *file;
+    QElapsedTimer*      elapsedTimer;
 
 };
 

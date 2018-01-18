@@ -22,6 +22,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include<QElapsedTimer>
+
+
+#include <chrono>
+using namespace std;
 
 namespace Ui
 {
@@ -42,7 +47,7 @@ public:
     bool b_firstSend;
     int i_line;
 
-    QVector<float> vector_DeltaTime;
+    QVector<double> vector_DeltaTime;
 
 private slots:
     void slot_TcpSocket_OneConnected();
@@ -70,11 +75,13 @@ private slots:
     void on_pushButton_Transmit_clicked();
 
     void sendToSocket();
+    void TimerCPlusPlus(int i);
 
 private:
     Ui::MainWindow*     ui;
     QTcpSocket*         TcpSocket_One;
     QTimer *            Timer_BetweenPacket;
+    QElapsedTimer*      elapsedTimer;
 };
 
 #endif // MAINWINDOW_H

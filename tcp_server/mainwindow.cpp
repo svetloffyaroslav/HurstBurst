@@ -18,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     file = new QFile("server_par.txt");
 
+    elapsedTimer = new QElapsedTimer();
+
 }
 
 MainWindow::~MainWindow()
@@ -75,21 +77,22 @@ void MainWindow::slot_TcpServer_OneClientReadyRead()
 {
     i_numberOfPackets++;
 
-   ui->lcdNumber->display(i_numberOfPackets);
+
 
    if(i_numberOfPackets ==1)
     {
-         i_previousTime = QTime::currentTime().msecsSinceStartOfDay();
-
-       ui->textEdit->insertPlainText(QString::number(0)+"\n");
+       vector_DeltaTime.clear();
+       i_previousTime = QTime::currentTime().msecsSinceStartOfDay();
+       vector_DeltaTime<<0;
+       elapsedTimer->start();
 
     }
     else
     {
-         int i_CurrentTime = QTime::currentTime().msecsSinceStartOfDay();
-         int i_deltaTime = i_CurrentTime-i_previousTime;
-         i_previousTime = i_CurrentTime;
-         ui->textEdit->insertPlainText(QString::number(i_deltaTime)+"\n");
+         quint64 i_CurrentTime = elapsedTimer->nsecsElapsed();
+         vector_DeltaTime<<i_CurrentTime;
+         elapsedTimer->start();
+         qDebug()<<vector_DeltaTime.size();
 
     }
 }
@@ -124,4 +127,12 @@ void MainWindow::on_pushButton_Clear_clicked()
     ui->lcdNumber->display(0);
     i_numberOfPackets = 0;
 
+}
+
+void MainWindow::on_pushButton_Output_clicked()
+{
+    for(int i = 0;i<vector_DeltaTime.size();i++)
+    {
+        ui->textEdit->insertPlainText(QString::number((qlonglong)vector_DeltaTime[i])+"\n");
+    }
 }
