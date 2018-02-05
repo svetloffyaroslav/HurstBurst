@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>560</width>
+    <width>595</width>
     <height>393</height>
    </rect>
   </property>
@@ -14,7 +14,7 @@
    <string/>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout_24">
+   <layout class="QGridLayout" name="gridLayout_26">
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout_21">
       <item row="0" column="0">
@@ -79,24 +79,38 @@
      </layout>
     </item>
     <item row="1" column="0">
-     <layout class="QGridLayout" name="gridLayout_22">
+     <layout class="QGridLayout" name="gridLayout_24">
       <item row="0" column="0">
-       <widget class="QListWidget" name="listWidget">
-        <item>
-         <property name="text">
-          <string>Парето</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Экспоненциальное</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>FARIMA</string>
-         </property>
-        </item>
+       <widget class="QGroupBox" name="groupBox_6">
+        <property name="title">
+         <string>Виды распределений</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_22">
+         <item row="0" column="0">
+          <widget class="QListWidget" name="listWidget">
+           <item>
+            <property name="text">
+             <string>Парето</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Экспоненциальное</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Вейбулла</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Логонормальное</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
       <item row="0" column="1">
@@ -203,13 +217,20 @@
           </layout>
          </widget>
         </item>
+        <item row="2" column="0">
+         <widget class="QPushButton" name="pushButton_GenerateTime">
+          <property name="text">
+           <string>ГЕНЕРАЦИЯ</string>
+          </property>
+         </widget>
+        </item>
         <item row="1" column="0">
          <widget class="QStackedWidget" name="stackedWidget_ParametersOfDistribution">
           <property name="frameShape">
            <enum>QFrame::Box</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>3</number>
           </property>
           <widget class="QWidget" name="page">
            <layout class="QGridLayout" name="gridLayout_3">
@@ -304,14 +325,106 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="page_3"/>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QPushButton" name="pushButton_GenerateTime">
-          <property name="text">
-           <string>ГЕНЕРАЦИЯ</string>
-          </property>
+          <widget class="QWidget" name="page_3">
+           <layout class="QGridLayout" name="gridLayout_27">
+            <item row="0" column="0">
+             <widget class="QGroupBox" name="groupBox_5">
+              <property name="title">
+               <string>Распределение Вейбулла</string>
+              </property>
+              <widget class="QWidget" name="">
+               <property name="geometry">
+                <rect>
+                 <x>10</x>
+                 <y>23</y>
+                 <width>199</width>
+                 <height>22</height>
+                </rect>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_23">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_5">
+                  <property name="text">
+                   <string>Параметр а</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QLineEdit" name="lineEdit_weibull_a"/>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="">
+               <property name="geometry">
+                <rect>
+                 <x>10</x>
+                 <y>51</y>
+                 <width>199</width>
+                 <height>22</height>
+                </rect>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_25">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_9">
+                  <property name="text">
+                   <string>Параметр b</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QLineEdit" name="lineEdit_weibull_b"/>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="page_4">
+           <widget class="QGroupBox" name="groupBox_7">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>10</y>
+              <width>225</width>
+              <height>83</height>
+             </rect>
+            </property>
+            <property name="title">
+             <string>Логонормальное</string>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_30">
+             <item row="0" column="0">
+              <layout class="QGridLayout" name="gridLayout_28">
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_10">
+                 <property name="text">
+                  <string>Параметр m:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="lineEdit_lognorm_m"/>
+               </item>
+              </layout>
+             </item>
+             <item row="1" column="0">
+              <layout class="QGridLayout" name="gridLayout_29">
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_11">
+                 <property name="text">
+                  <string>Параметр s:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="lineEdit_lognorm_s"/>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+          </widget>
          </widget>
         </item>
        </layout>
@@ -427,7 +540,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>560</width>
+     <width>595</width>
      <height>21</height>
     </rect>
    </property>

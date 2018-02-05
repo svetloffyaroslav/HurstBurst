@@ -1,6 +1,28 @@
+// ======================================================================
+// pult.cpp
+// ======================================================================
+//           This file is a part of the panel simulator for
+//                           "Ornament-POO"
+// ======================================================================
+//  Copyright (c) 2017 by Svetlov Yaroslav
+//
+//  Email  : svetlov.yaroslav@gmail.com
+//  vk.com : https://vk.com/id52304190
+//
+//  Description
+//  ---------------
+//  This is the main modul of programm. There has been described all algorithms
+//  of interface, connection with servers socket.
+//
+//  ---------------
+//  Codec:  UTF-8
+//
+//  Last changes: 18.09.2017
+// ======================================================================
+
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -23,9 +45,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->listWidget->setCurrentRow(0);
 
 }
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Слот, срабатывающий при подключении к серверу~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 void MainWindow::slot_TcpSocket_OneConnected()
 {
+    /* slot */
     ui->statusBar->showMessage("Подключился",3000);                                                             // вывод информации в строку статуса на 3 с
     ui->groupBox_TimeRow->setEnabled(true);                                                                     // группа элементов "Временной ряд" - становится доступной
     ui->groupBox_Transmission->setEnabled(true);                                                                // группа элементов передача, становится доступным
@@ -67,15 +90,11 @@ void MainWindow::slot_TcpSocket_OneError(QAbstractSocket::SocketError error_One)
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Удаление интерфеса при закрытии приложения~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 MainWindow::~MainWindow()
 {
     delete ui;
 }
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Кнопка "Подключить"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::on_pushButton_ConnectOrDisconnect_toggled(bool checked)
 {
      if(checked)
@@ -96,10 +115,9 @@ void MainWindow::on_pushButton_ConnectOrDisconnect_toggled(bool checked)
         ui->pushButton_ConnectOrDisconnect->setText("Подключить");                       // кнопке устанавливается имя
     }
 }
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Кнопка "Передать"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 void MainWindow::on_pushButton_Transmit_clicked()
 {
     ui->progressBar->setValue(0);                                                   // строке прогресса устанавливается начальное значение
@@ -115,9 +133,7 @@ void MainWindow::on_pushButton_Transmit_clicked()
     StartTimerDelta(i_numberPacket);                                                // запуск таймера
     ui->progressBar->setMaximum(ui->spinBox_parametr_N->value());
 }
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Функция для последовательного запуска таймера~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::StartTimerDelta(int i)
 {
     qDebug()<<" i =" <<i;
@@ -147,7 +163,6 @@ void MainWindow::slot_timeoutTimer_BetweenPacket()
        Timer_BetweenPacket->stop();                                         // таймер останавливается
     }
 }
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
@@ -166,18 +181,9 @@ void MainWindow::on_action_SaveTime_triggered()
 
 }
 
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Кнопка "ГЕНЕРАЦИЯ"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Кнопка "ГЕНЕРАЦИЯ"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
 void MainWindow::GenerateTime(int i_WhatGen)
 {
+
     ui-> tableWidget ->setRowCount(0);                                              // в таблице - стираются предыдущие значения
     vector_DeltaTime.clear();                                                       // очищается массив переменных для времени
 
@@ -195,13 +201,14 @@ void MainWindow::GenerateTime(int i_WhatGen)
 
     char* outname;                                                                  // указатель на char задания имени файла куда будут записываться сгенерированные значения
 
-    if(i_WhatGen==1)
+
+    switch (i_WhatGen)
     {
-        outname = "HurstBurst_pareto.txt";  // имя тектового файла, куда попадут значения если генерируется Парето
-    }
-    else if(i_WhatGen==2)
-    {
-        outname = "HurstBurst_exp.txt";  // имя тектового файла, куда попадут значения, если генерируется Экспонциальное
+        case 1: outname = "HurstBurst_pareto.txt"; break;
+        case 2: outname = "HurstBurst_exp.txt"; break;
+        case 3: outname = "HurstBurst_weibull.txt"; break;
+        case 4: outname = "HurstBurst_lognorm.txt"; break;
+        default:                                 break;
     }
 
     FILE* OUT;                                                                  // объект файла
@@ -242,7 +249,8 @@ void MainWindow::GenerateTime(int i_WhatGen)
         vector_DeltaTime[s] = y*f_tens;
         fprintf(OUT, "%f\n",y);
     }
- }else if(i_WhatGen==2)
+ }
+ else if(i_WhatGen==2)
  {
      for(int s= 0;s<N;s++)
      {
@@ -250,6 +258,26 @@ void MainWindow::GenerateTime(int i_WhatGen)
          float y =  - log(r)/f_L;
          vector_DeltaTime[s] = y*f_tens;
          fprintf(OUT, "%f\n",y);
+     }
+ }
+ else if(i_WhatGen==3)
+ {
+     std::weibull_distribution<float> weibull_distr(ui->lineEdit_weibull_a->text().toDouble(),ui->lineEdit_weibull_b->text().toDouble());
+     for(int s= 0;s<N;s++)
+     {
+         float r = weibull_distr(generator);
+         vector_DeltaTime[s]=r*f_tens;
+         fprintf(OUT,"%f\n",r);
+     }
+ }
+ else if(i_WhatGen==4)
+ {
+     std::lognormal_distribution<float> lognorm_distr(ui->lineEdit_lognorm_m->text().toDouble(),ui->lineEdit_lognorm_s->text().toDouble());
+     for(int s= 0;s<N;s++)
+     {
+          float r = lognorm_distr(generator);
+          vector_DeltaTime[s]=r*f_tens;
+          fprintf(OUT,"%f\n",r);
      }
  }
 
@@ -270,7 +298,6 @@ void MainWindow::GenerateTime(int i_WhatGen)
      ui->tableWidget->setItem(i_currentRow,0,newItem);
      ui->tableWidget->setCurrentCell(i,0);
    }
-
 }
 
 
@@ -350,3 +377,4 @@ void MainWindow::on_pushButton_GenerateTime_clicked()
 {
     GenerateTime(ui->stackedWidget_ParametersOfDistribution->currentIndex()+1);                                               // вызывается функция осущетсвляющая генерацию  - 1 значит распределение Парето
 }
+
