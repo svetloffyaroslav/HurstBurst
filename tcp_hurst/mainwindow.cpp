@@ -1,26 +1,3 @@
-// ======================================================================
-// pult.cpp
-// ======================================================================
-//           This file is a part of the panel simulator for
-//                           "Ornament-POO"
-// ======================================================================
-//  Copyright (c) 2017 by Svetlov Yaroslav
-//
-//  Email  : svetlov.yaroslav@gmail.com
-//  vk.com : https://vk.com/id52304190
-//
-//  Description
-//  ---------------
-//  This is the main modul of programm. There has been described all algorithms
-//  of interface, connection with servers socket.
-//
-//  ---------------
-//  Codec:  UTF-8
-//
-//  Last changes: 18.09.2017
-// ======================================================================
-
-
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
