@@ -22,11 +22,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include<QElapsedTimer>
-
-
-#include <chrono>
-using namespace std;
+#include<ctime>
+#include<chrono>
 
 namespace Ui
 {
@@ -47,7 +44,7 @@ public:
     bool b_firstSend;
     int i_line;
 
-    QVector<double> vector_DeltaTime;
+    QVector<float> vector_DeltaTime;
 
 private slots:
     void slot_TcpSocket_OneConnected();
@@ -62,12 +59,6 @@ private slots:
     void StartTimerDelta(int i);
 
 
-    void on_pushButton_GenPareto_clicked();
-
-
-
-    void on_pushButton_GenExp_clicked();
-
     void GenerateTime(int i_WhatGen);
 
     void on_pushButton_DownloadFromTXT_clicked();
@@ -75,13 +66,15 @@ private slots:
     void on_pushButton_Transmit_clicked();
 
     void sendToSocket();
-    void TimerCPlusPlus(int i);
+
+    void on_listWidget_clicked(const QModelIndex &index);
+
+    void on_pushButton_GenerateTime_clicked();
 
 private:
     Ui::MainWindow*     ui;
     QTcpSocket*         TcpSocket_One;
     QTimer *            Timer_BetweenPacket;
-    QElapsedTimer*      elapsedTimer;
 };
 
 #endif // MAINWINDOW_H

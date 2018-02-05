@@ -11,7 +11,6 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setWindowTitle("HURST BURST | TCP client");
     TcpSocket_One= new QTcpSocket(this);                                                                        // создается объект сокета
     Timer_BetweenPacket = new QTimer(this);                                                                     // создается объект таймера
-    elapsedTimer = new QElapsedTimer();
     ui->lineEdit_IPAdres->setInputMask("000.000.000.000;");                                                     // в строку ввода IP адреса устанавливается маска
     connect(TcpSocket_One,  SIGNAL (connected()),    SLOT(slot_TcpSocket_OneConnected()));                      // connected() -  вызывается при создании соединения c сервером;
     connect(TcpSocket_One,  SIGNAL (readyRead()),    SLOT(slot_TcpSocket_OneReadyRead()));                      // readyRead() - при готовности предоставить данные для чтения;
@@ -21,6 +20,8 @@ MainWindow::MainWindow(QWidget *parent) :
             );
     connect(Timer_BetweenPacket,SIGNAL(timeout()),SLOT(slot_timeoutTimer_BetweenPacket()));                       // подключаем таймер к слоту
     i_numberPacket = 0;                                                                                           // устанавливаем кол-во переданных пакетов
+    ui->listWidget->setCurrentRow(0);
+
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Слот, срабатывающий при подключении к серверу~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::slot_TcpSocket_OneConnected()
@@ -101,7 +102,7 @@ void MainWindow::on_pushButton_ConnectOrDisconnect_toggled(bool checked)
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Кнопка "Передать"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::on_pushButton_Transmit_clicked()
 {
-    ui->lcdNumber->display(0);                                                   // строке прогресса устанавливается начальное значение
+    ui->progressBar->setValue(0);                                                   // строке прогресса устанавливается начальное значение
     ByteArray_Send.clear();                                                         // очищается байтовый массив для передачи
 
     ByteArray_Send.resize(ui->spinBox_SizeOfPacket->value());                       // байтовому массиву для передачи задается размер, указанный в spinBox "Размер пакетов"
@@ -112,49 +113,30 @@ void MainWindow::on_pushButton_Transmit_clicked()
 
     i_numberPacket = 0;
     StartTimerDelta(i_numberPacket);                                                // запуск таймера
-
+    ui->progressBar->setMaximum(ui->spinBox_parametr_N->value());
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Функция для последовательного запуска таймера~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::StartTimerDelta(int i)
 {
-
-    elapsedTimer->start();
-    if(i<ui->spinBox_parametr_N->value())
+    qDebug()<<" i =" <<i;
+    if(i>ui->spinBox_parametr_N->value())                               // если пришедший аргумент превышает допустимый максимальное число пакетов
     {
-     for(;;)
-     {
-         if(elapsedTimer->nsecsElapsed()>=vector_DeltaTime[i])
-         {
-             break;
-         }
-     }
-        sendToSocket();
-        StartTimerDelta(i+1);
+        Timer_BetweenPacket->stop();                                    // таймер останавливается
     }
     else
     {
-        ui->lcdNumber->display(i+1);
-        ui->statusBar->showMessage("Передача завершена");
+        Timer_BetweenPacket->start((int)(vector_DeltaTime[i]));         // вызывается таймер со значением i-го элемента массива в качестве аргумента
     }
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-void MainWindow::TimerCPlusPlus(int i)
-{
-    for(int i= 0;i<10;i++)
-    {
-        qDebug()<<"Хуй";
-    }
-
-}
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Слот, срабатывающий при окончании таймера~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::slot_timeoutTimer_BetweenPacket()
 {
     i_numberPacket++;                                                       // увеличивается число пакетов
-
+    ui->progressBar->setValue(i_numberPacket);                              // сдвигается заполнение строки прогресса
     if(i_numberPacket<ui->spinBox_parametr_N->value())                      // если кол-во пакетов не превышает указнных в spinbox
     {
         sendToSocket();                                                       // посылай порту
@@ -171,6 +153,7 @@ void MainWindow::slot_timeoutTimer_BetweenPacket()
 
 void MainWindow::sendToSocket()
 {
+    qDebug()<<"write";
     TcpSocket_One->write(ByteArray_Send);                                           // запись массива в сокет
     TcpSocket_One->flush();                                                         // "выбрасывание" данных
 }
@@ -185,26 +168,16 @@ void MainWindow::on_action_SaveTime_triggered()
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Кнопка "ГЕНЕРАЦИЯ"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void MainWindow::on_pushButton_GenPareto_clicked()
-{
-   GenerateTime(1);                                               // вызывается функция осущетсвляющая генерацию  - 1 значит распределение Парето
-}
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Кнопка "ГЕНЕРАЦИЯ"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void MainWindow::on_pushButton_GenExp_clicked()
-{
-
-    GenerateTime(2);                                            // вызывается функция осущетсвляющая генерацию  - 2 значит экспонециальное распределение
-}
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 
 void MainWindow::GenerateTime(int i_WhatGen)
 {
-   elapsedTimer->start();
     ui-> tableWidget ->setRowCount(0);                                              // в таблице - стираются предыдущие значения
     vector_DeltaTime.clear();                                                       // очищается массив переменных для времени
 
@@ -237,9 +210,13 @@ void MainWindow::GenerateTime(int i_WhatGen)
     /*Псевдослучайная величина с равномерным распределением*/
     const int range_from = 0;// N(0,1)
     const int range_to = 1;
-    std::random_device                      rand_dev;
-    std::mt19937                            generator(rand_dev());              // алгоритм генерирования
-    std::uniform_real_distribution<double>   distr(range_from, range_to);        // тип распределения - равномерный float от 0 до 1
+
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+
+    //std::
+    // std::random_device                      rand_dev;
+    std::mt19937                            generator(seed);              // алгоритм генерирования
+    std::uniform_real_distribution<float>   distr(range_from, range_to);        // тип распределения - равномерный float от 0 до 1
 
 
     float f_tens = 0;                                                           // десятикратное увеличение
@@ -262,7 +239,7 @@ void MainWindow::GenerateTime(int i_WhatGen)
     {
         float rand = distr(generator);
         float y = f_k/pow(1-rand,1.0/f_a);
-        vector_DeltaTime[s] = y*f_tens*1000000;
+        vector_DeltaTime[s] = y*f_tens;
         fprintf(OUT, "%f\n",y);
     }
  }else if(i_WhatGen==2)
@@ -288,7 +265,7 @@ void MainWindow::GenerateTime(int i_WhatGen)
    {
      i_currentRow++;
      QTableWidgetItem *newItem = new QTableWidgetItem();
-     newItem->setText(QString::number(vector_DeltaTime[i]/1000000));
+     newItem->setText(QString::number(vector_DeltaTime[i]));
      newItem->setTextAlignment(Qt::AlignHCenter);
      ui->tableWidget->setItem(i_currentRow,0,newItem);
      ui->tableWidget->setCurrentCell(i,0);
@@ -363,3 +340,13 @@ void MainWindow::on_pushButton_DownloadFromTXT_clicked()
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+
+void MainWindow::on_listWidget_clicked(const QModelIndex &index)
+{
+    ui->stackedWidget_ParametersOfDistribution->setCurrentIndex(index.row());
+}
+
+void MainWindow::on_pushButton_GenerateTime_clicked()
+{
+    GenerateTime(ui->stackedWidget_ParametersOfDistribution->currentIndex()+1);                                               // вызывается функция осущетсвляющая генерацию  - 1 значит распределение Парето
+}
