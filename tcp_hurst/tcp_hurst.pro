@@ -8,14 +8,16 @@ QT       += core gui printsupport network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = tcp_hurst
+TARGET = HurstBurst
 TEMPLATE = app
 CONFIG += c++11
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    qcustomplot.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    qcustomplot.h
 
 FORMS    += mainwindow.ui
