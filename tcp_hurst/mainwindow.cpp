@@ -1,92 +1,56 @@
-// ======================================================================
-// mainwindow.cpp
-// ======================================================================
-//           This file is a part of programm Hurst Burst | TCP client v0.1
-// ======================================================================
-//  Author: Svetlov Yaroslav
-//  vk.com : https://vk.com/id52304190
-//
-//  Contact
-//  --------------
-//  Email  : hurst_burst@gmail.com
-//
-//
-//  Description:
-//  This is the main part of programm.There has been described all algorithms
-//  of interface, distributions, and tcp-socket. This programm works like TCP
-//  client.
-//
-//  ---------------
-//  Codec:  UTF-8
-//  Data: 07.02.2018
-// ======================================================================
-
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 
-// [1]
-// Set up interface, tcp-socket, and all signal-slots connection
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    /*!
-      [1.1] - Set up interface and prelimary settings, like: mask in lineEdit,
-      title in head of window, values of variables, which will be use for translation
-
-    */
-
-    //[1.1]
     ui->setupUi(this);
     this->setWindowTitle("HURST BURST | TCP client");
-    ui->listWidget->setCurrentRow(0);
-    ui->stackedWidget_ParametersOfDistribution->setCurrentIndex(0);
-    ui->lineEdit_IPAdres->setInputMask("000.000.000.000;");
-    i_numberPacket = 0;
-
-    TcpSocket_One= new QTcpSocket(this);
-    Timer_BetweenPacket = new QTimer(this);
-
-    connect(TcpSocket_One,  SIGNAL (connected()),    SLOT(slot_TcpSocket_OneConnected()));
-    connect(TcpSocket_One,  SIGNAL (readyRead()),    SLOT(slot_TcpSocket_OneReadyRead()));
-    connect(TcpSocket_One, SIGNAL(disconnected()),  SLOT(slot_TcpSocket_OneDisconnected()));
+    TcpSocket_One= new QTcpSocket(this);                                                                        // создается объект сокета
+    Timer_BetweenPacket = new QTimer(this);                                                                     // создается объект таймера
+    ui->lineEdit_IPAdres->setInputMask("000.000.000.000;");                                                     // в строку ввода IP адреса устанавливается маска
+    connect(TcpSocket_One,  SIGNAL (connected()),    SLOT(slot_TcpSocket_OneConnected()));                      // connected() -  вызывается при создании соединения c сервером;
+    connect(TcpSocket_One,  SIGNAL (readyRead()),    SLOT(slot_TcpSocket_OneReadyRead()));                      // readyRead() - при готовности предоставить данные для чтения;
+    connect(TcpSocket_One, SIGNAL(disconnected()),  SLOT(slot_TcpSocket_OneDisconnected()));                    // disconnected  - при отключении сокета от сервера;
     connect(TcpSocket_One, SIGNAL(error(QAbstractSocket::SocketError)),
-             this,                                  SLOT(slot_TcpSocket_OneError(QAbstractSocket::SocketError))
+             this,                                  SLOT(slot_TcpSocket_OneError(QAbstractSocket::SocketError))  // error(QAbstractSocket::SocketError) - при возникновении ошибки
             );
-    connect(Timer_BetweenPacket,SIGNAL(timeout()),SLOT(slot_timeoutTimer_BetweenPacket()));
-
-    // set dark background gradient:
-    QLinearGradient gradient(0, 0, 0, 400);
-    gradient.setColorAt(0, QColor(90, 90, 90));
-    gradient.setColorAt(0.38, QColor(105, 105, 105));
-    gradient.setColorAt(1, QColor(70, 70, 70));
-    ui->widget_customplot->setBackground(QBrush(gradient));
-
-    ui->widget_customplotNoise->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    connect(Timer_BetweenPacket,SIGNAL(timeout()),SLOT(slot_timeoutTimer_BetweenPacket()));                       // подключаем таймер к слоту
+    i_numberPacket = 0;                                                                                           // устанавливаем кол-во переданных пакетов
+    ui->listWidget->setCurrentRow(0);
 
 }
-
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Слот, срабатывающий при подключении к серверу~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::slot_TcpSocket_OneConnected()
 {
-    /* slot */
-    ui->statusBar->showMessage(tr("Подключился"),3000);
-    ui->groupBox_TimeRow->setEnabled(true);
-    ui->groupBox_Transmission->setEnabled(true);
+    ui->statusBar->showMessage("Подключился",3000);                                                             // вывод информации в строку статуса на 3 с
+    ui->groupBox_TimeRow->setEnabled(true);                                                                     // группа элементов "Временной ряд" - становится доступной
+    ui->groupBox_Transmission->setEnabled(true);                                                                // группа элементов передача, становится доступным
 }
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Слот, срабатывающий при поступлении данных от сервера~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::slot_TcpSocket_OneReadyRead()
 {
-    qDebug()<<"Готовность к чтению";
+    qDebug()<<"Готовность к чтению";                                                                            // Если от сервера- что-то придет
 }
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Слот, срабатывающий при Отключении от сервера~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::slot_TcpSocket_OneDisconnected()
 {
-    ui->statusBar->showMessage("Отключился",3000);
-    ui->groupBox_TimeRow->setEnabled(false);
+    ui->statusBar->showMessage("Отключился",3000);                                         // При отключении от сервера на 3 сек. показывается сообщение в строке статуса
+    ui->groupBox_TimeRow->setEnabled(false);                                               // группы элементов становятся недоступными
     ui->groupBox_Transmission->setEnabled(false);
-    Timer_BetweenPacket->stop();
+    Timer_BetweenPacket->stop();                                                           // таймер для пересылки пакетов останавливается
 }
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Слот, срабатывающий при Возникновении ошибки~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::slot_TcpSocket_OneError(QAbstractSocket::SocketError error_One)
 {
     QString strSystemError =
@@ -98,85 +62,100 @@ void MainWindow::slot_TcpSocket_OneError(QAbstractSocket::SocketError error_One)
                      "System Socket: The connection was refused." :
                      QString(TcpSocket_One->errorString())
                     );
-    ui->statusBar->showMessage(strSystemError,3000);
+    ui->statusBar->showMessage(strSystemError,3000);                            // выводится сообщение в строку статуса на 3 сек
 }
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Удаление интерфеса при закрытии приложения~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 MainWindow::~MainWindow()
 {
     delete ui;
 }
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Кнопка "Подключить"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::on_pushButton_ConnectOrDisconnect_toggled(bool checked)
 {
      if(checked)
     {
-        QString string_IPAdress = ui->lineEdit_IPAdres->text();
-        quint16 string_Port = ui->lineEdit_Port->text().toUShort();
-        QHostAddress address(string_IPAdress);
-        TcpSocket_One -> connectToHost (address,string_Port);
-        ui->pushButton_ConnectOrDisconnect->setText(tr("Отключить"));
+         /*Если кнопка  находится в состоянии "зажатия"*/
+
+        QString string_IPAdress = ui->lineEdit_IPAdres->text();                          // строчная переменная заполняется введенным пользователем IP-адресом в строку "IP-адрес:"
+        quint16 string_Port = ui->lineEdit_Port->text().toUShort();                      // информация в строке "Порт" заполняет
+        QHostAddress address(string_IPAdress);                                           // класс обеспечивающий IP адрес
+        TcpSocket_One -> connectToHost (address,string_Port);                            // подключай сокеты по этому адрессу в соответствующие порты
+        ui->pushButton_ConnectOrDisconnect->setText("Отключить");                        // переименовывается кнопка
     }
     else
     {
-        TcpSocket_One  -> disconnectFromHost();
-        ui->pushButton_ConnectOrDisconnect->setText(tr("Подключить"));
+        /*Если кнопка  находится в состоянии "отжатия"*/
+
+        TcpSocket_One  -> disconnectFromHost();                                          // закрытие сокета
+        ui->pushButton_ConnectOrDisconnect->setText("Подключить");                       // кнопке устанавливается имя
     }
 }
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Кнопка "Передать"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::on_pushButton_Transmit_clicked()
 {
-    ui->progressBar->setValue(0);
-    ByteArray_Send.clear();
+    ui->progressBar->setValue(0);                                                   // строке прогресса устанавливается начальное значение
+    ByteArray_Send.clear();                                                         // очищается байтовый массив для передачи
 
-    ByteArray_Send.resize(ui->spinBox_SizeOfPacket->value());
-    ByteArray_Send.fill('x');
+    ByteArray_Send.resize(ui->spinBox_SizeOfPacket->value());                       // байтовому массиву для передачи задается размер, указанный в spinBox "Размер пакетов"
+    ByteArray_Send.fill('x');                                                       // заполняется заполняется буквой
 
+    /* Посылка первого пакета */
     sendToSocket();
 
     i_numberPacket = 0;
-    StartTimerDelta(i_numberPacket);
+    StartTimerDelta(i_numberPacket);                                                // запуск таймера
     ui->progressBar->setMaximum(ui->spinBox_parametr_N->value());
 }
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Функция для последовательного запуска таймера~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::StartTimerDelta(int i)
 {
-    if(i>ui->spinBox_parametr_N->value())
+    qDebug()<<" i =" <<i;
+    if(i>ui->spinBox_parametr_N->value())                               // если пришедший аргумент превышает допустимый максимальное число пакетов
     {
-        Timer_BetweenPacket->stop();
+        Timer_BetweenPacket->stop();                                    // таймер останавливается
     }
     else
     {
-        Timer_BetweenPacket->start((int)(vector_DeltaTime[i]));
+        Timer_BetweenPacket->start((int)(vector_DeltaTime[i]));         // вызывается таймер со значением i-го элемента массива в качестве аргумента
     }
 }
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Слот, срабатывающий при окончании таймера~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::slot_timeoutTimer_BetweenPacket()
 {
-    i_numberPacket++;
-    ui->progressBar->setValue(i_numberPacket);
-    if(i_numberPacket<ui->spinBox_parametr_N->value())
+    i_numberPacket++;                                                       // увеличивается число пакетов
+    ui->progressBar->setValue(i_numberPacket);                              // сдвигается заполнение строки прогресса
+    if(i_numberPacket<ui->spinBox_parametr_N->value())                      // если кол-во пакетов не превышает указнных в spinbox
     {
-        sendToSocket();
-        StartTimerDelta(i_numberPacket);
+        sendToSocket();                                                       // посылай порту
+        StartTimerDelta(i_numberPacket);                                    // Вызывается функция запуска таймера
     }
-    else
+    else                                                                    // если кол-во пакетов превышает указнные
     {
-       Timer_BetweenPacket->stop();
+       Timer_BetweenPacket->stop();                                         // таймер останавливается
     }
 }
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
 void MainWindow::sendToSocket()
 {
-
-    TcpSocket_One->write(ByteArray_Send);
-    TcpSocket_One->flush();
+    qDebug()<<"write";
+    TcpSocket_One->write(ByteArray_Send);                                           // запись массива в сокет
+    TcpSocket_One->flush();                                                         // "выбрасывание" данных
 }
 
 
@@ -187,35 +166,48 @@ void MainWindow::on_action_SaveTime_triggered()
 
 }
 
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Кнопка "ГЕНЕРАЦИЯ"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Кнопка "ГЕНЕРАЦИЯ"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
 void MainWindow::GenerateTime(int i_WhatGen)
 {
+    ui-> tableWidget ->setRowCount(0);                                              // в таблице - стираются предыдущие значения
+    vector_DeltaTime.clear();                                                       // очищается массив переменных для времени
 
-    ui-> tableWidget ->setRowCount(0);
-    vector_DeltaTime.clear();
-
-    float f_a = ui->lineEdit_parametr_a->text().toFloat();
+    /* Параметры распределения Парето */
+    float f_a = ui->lineEdit_parametr_a->text().toFloat();                          //  значение введеное в строку "Параметр формы, a:", "Граничный параметр, k:" записывается во float переменные
     float f_k = ui->lineEdit_parametr_k->text().toFloat();
 
-    float f_L = ui->lineEdit_parametr_L->text().toFloat();
+    /* Параметры экспоненциального распределения */
+    float f_L = ui->lineEdit_parametr_L->text().toFloat();                          // значение в строке "Параметр" записывается в float
 
+    /* Кол-во пакетов*/
     int N = ui->spinBox_parametr_N->value();
 
-    vector_DeltaTime.resize(N);
+    vector_DeltaTime.resize(N);                                                     // задается размер массива в соответствии с кол-вом байт
 
-    char* outname;
+    char* outname;                                                                  // указатель на char задания имени файла куда будут записываться сгенерированные значения
 
-    switch (i_WhatGen)
+    if(i_WhatGen==1)
     {
-        case 1: outname = "HurstBurst_pareto.txt"; break;
-        case 2: outname = "HurstBurst_exp.txt"; break;
-        case 3: outname = "HurstBurst_weibull.txt"; break;
-        case 4: outname = "HurstBurst_lognorm.txt"; break;
-        default:                                 break;
+        outname = "HurstBurst_pareto.txt";  // имя тектового файла, куда попадут значения если генерируется Парето
+    }
+    else if(i_WhatGen==2)
+    {
+        outname = "HurstBurst_exp.txt";  // имя тектового файла, куда попадут значения, если генерируется Экспонциальное
     }
 
-    FILE* OUT_F;
-    OUT_F = fopen(outname, "wt");
+    FILE* OUT;                                                                  // объект файла
+    OUT = fopen(outname, "wt");                                                 //  открытия файла для записи
 
+    /*Псевдослучайная величина с равномерным распределением*/
     const int range_from = 0;// N(0,1)
     const int range_to = 1;
 
@@ -223,11 +215,11 @@ void MainWindow::GenerateTime(int i_WhatGen)
 
     //std::
     // std::random_device                      rand_dev;
-    std::mt19937                            generator(seed);
-    std::uniform_real_distribution<float>   distr(range_from, range_to);
+    std::mt19937                            generator(seed);              // алгоритм генерирования
+    std::uniform_real_distribution<float>   distr(range_from, range_to);        // тип распределения - равномерный float от 0 до 1
 
 
-    float f_tens = 0;
+    float f_tens = 0;                                                           // десятикратное увеличение
     if(ui->radioButton_1X->isChecked())
     {
         f_tens = 1.0;
@@ -248,46 +240,25 @@ void MainWindow::GenerateTime(int i_WhatGen)
         float rand = distr(generator);
         float y = f_k/pow(1-rand,1.0/f_a);
         vector_DeltaTime[s] = y*f_tens;
-        fprintf(OUT_F, "%f\n",y);
+        fprintf(OUT, "%f\n",y);
     }
- }
- else if(i_WhatGen==2)
+ }else if(i_WhatGen==2)
  {
      for(int s= 0;s<N;s++)
      {
          float r = distr(generator);
          float y =  - log(r)/f_L;
          vector_DeltaTime[s] = y*f_tens;
-         fprintf(OUT_F, "%f\n",y);
-     }
- }
- else if(i_WhatGen==3)
- {
-     std::weibull_distribution<float> weibull_distr(ui->lineEdit_weibull_a->text().toDouble(),ui->lineEdit_weibull_b->text().toDouble());
-     for(int s= 0;s<N;s++)
-     {
-         float r = weibull_distr(generator);
-         vector_DeltaTime[s]=r*f_tens;
-         fprintf(OUT_F,"%f\n",r);
-     }
- }
- else if(i_WhatGen==4)
- {
-     std::lognormal_distribution<float> lognorm_distr(ui->lineEdit_lognorm_m->text().toDouble(),ui->lineEdit_lognorm_s->text().toDouble());
-     for(int s= 0;s<N;s++)
-     {
-          float r = lognorm_distr(generator);
-          vector_DeltaTime[s]=r*f_tens;
-          fprintf(OUT_F,"%f\n",r);
+         fprintf(OUT, "%f\n",y);
      }
  }
 
- fclose(OUT_F);
+ fclose(OUT);
  ui-> tableWidget ->setRowCount(N);
  QTableWidgetItem *newItem = new QTableWidgetItem();
  newItem->setText(QString::number(0));
  newItem->setTextAlignment(Qt::AlignHCenter);
- ui->tableWidget->setItem(0,0,newItem);
+  ui->tableWidget->setItem(0,0,newItem);
 
  int i_currentRow = 0;
  for(int i=0;i<N;i++)
@@ -300,10 +271,10 @@ void MainWindow::GenerateTime(int i_WhatGen)
      ui->tableWidget->setCurrentCell(i,0);
    }
 
-     // drawGraphic();
-     drawGraphicNoise();
 }
 
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Кнопка "ЗАГРУЗИТЬ ИЗ TXT"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void MainWindow::on_pushButton_DownloadFromTXT_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
@@ -366,108 +337,9 @@ void MainWindow::on_pushButton_DownloadFromTXT_clicked()
          ui->tableWidget->setCurrentCell(i,0);
        }
 }
-
-void MainWindow::drawGraphic()
-{
-
-//    QCPBars *bars_distribution = new QCPBars(ui->widget_customplot->xAxis, ui->widget_customplot->yAxis);
-//    bars_distribution->setAntialiased(false); // gives more crisp, pixel aligned bar borders
-
-//    bars_distribution->setPen(QPen(QColor(111, 9, 176).lighter(170)));
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    QCPBars *fossil = new QCPBars(ui->widget_customplot->xAxis, ui->widget_customplot->yAxis);
-
-    fossil->setAntialiased(false);
-    // set names and colors:
-    fossil->setName("Fossil fuels");
-    fossil->setPen(QPen(QColor(111, 9, 176).lighter(170)));
-    fossil->setBrush(QColor(111, 9, 176));
-
-    // prepare x axis with country labels:
-    ui->widget_customplot->xAxis->setTickLabelRotation(150);
-    // ui->widget_customplot->xAxis->setSubTicks(false);
-    ui->widget_customplot->xAxis->setTickLength(0, 8);
-    ui->widget_customplot->xAxis->setRange(0, 8);
-    ui->widget_customplot->xAxis->setBasePen(QPen(Qt::white));
-    ui->widget_customplot->xAxis->setTickPen(QPen(Qt::white));
-    ui->widget_customplot->xAxis->grid()->setVisible(true);
-    ui->widget_customplot->xAxis->grid()->setPen(QPen(QColor(130, 130, 130), 0, Qt::DotLine));
-    ui->widget_customplot->xAxis->setTickLabelColor(Qt::white);
-    ui->widget_customplot->xAxis->setLabelColor(Qt::white);
-
-    // prepare y axis:
-    ui->widget_customplot->yAxis->setRange(0, 5.1);
-    ui->widget_customplot->yAxis->setPadding(5); // a bit more space to the left border
-    ui->widget_customplot->yAxis->setLabel("Power Consumption in\nKilowatts per Capita (2007)");
-    ui->widget_customplot->yAxis->setBasePen(QPen(Qt::white));
-    ui->widget_customplot->yAxis->setTickPen(QPen(Qt::white));
-    ui->widget_customplot->yAxis->setSubTickPen(QPen(Qt::white));
-    ui->widget_customplot->yAxis->grid()->setSubGridVisible(true);
-    ui->widget_customplot->yAxis->setTickLabelColor(Qt::white);
-    ui->widget_customplot->yAxis->setLabelColor(Qt::white);
-    ui->widget_customplot->yAxis->grid()->setPen(QPen(QColor(130, 130, 130), 0, Qt::SolidLine));
-    ui->widget_customplot->yAxis->grid()->setSubGridPen(QPen(QColor(130, 130, 130), 0, Qt::DotLine));
-
-    QVector<double> fossilData;
-    QVector<double> ticks;
-
-      ticks <<1 <<2  << 3 << 4 << 5 << 6 << 7;
-      fossilData << 0.86*10.5 << 0.83*5.5 << 0.84*5.5 << 0.52*5.8 << 0.89*5.2 << 0.90*4.2 << 0.67*11;
-
-
-    // например
-
-
-    // отсортировали от меньшего к старшему
-    // qSort(vector_DeltaTime.begin(), vector_DeltaTime.end());
-
-     // Преобразования к double
-
-
-    fossil->setData(ticks,fossilData);
-
-    // setup legend:
-    ui->widget_customplot->legend->setVisible(true);
-    ui->widget_customplot->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignTop|Qt::AlignHCenter);
-    ui->widget_customplot->legend->setBrush(QColor(255, 255, 255, 100));
-    ui->widget_customplot->legend->setBorderPen(Qt::NoPen);
-    QFont legendFont = font();
-    legendFont.setPointSize(10);
-    ui->widget_customplot->legend->setFont(legendFont);
-    ui->widget_customplot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
-    ui->widget_customplot->replot();
-}
-
-void MainWindow::drawGraphicNoise()
-{
-    QVector<double> d_x(vector_DeltaTime.size()),d_y(vector_DeltaTime.size());                                     // инициализиурется два вектора типа double для отправки в класс QCustomPlot и построения графиков
-
-
-
-    for(int i=0;i<vector_DeltaTime.size();i++)                                                                // цикл от 0 до количества всех пришедших значений
-     {
-        d_x[i] =(double)i;                                                                               // в x вектор попадают значения i
-        d_y[i] =(double)vector_DeltaTime[i];                                                                          // в y вектор заходят пришедшие значение импульсной характеристики
-     }
-
-    double minY = d_y[0],maxY = d_y[0];                                                                 // расчет максимального и минимального значения для вектора y
-    for(int i = 0;i<vector_DeltaTime.size();i++)                                                             // Снова прогоняем цикл сравнивая значения
-     {
-        if (d_y[i]<minY) minY = d_y[i];                                                                  // устанавливая минимальное
-        if (d_y[i]>maxY) maxY = d_y[i];                                                                  //  и устанавливая максимальное
-     }
-
-
-        ui->widget_customplotNoise->clearGraphs();                                                          // очищаем график
-        ui->widget_customplotNoise->addGraph();                                                             // добавляем новый график
-        ui->widget_customplotNoise->xAxis->setRange(d_x[0],d_x[vector_DeltaTime.size()-1]);                      // Устанавливаем диапазон - от Xo до Xмах
-        ui->widget_customplotNoise->yAxis->setRange(minY,maxY);                                             // Устанавливает диапазон  от Ymin до Ymax
-        ui->widget_customplotNoise->graph(0)->setData(d_x,d_y);                                             // Устанавливаем данные
-//                                          ui->widget_GraphImpulse->xAxis->setLabel("x");                                                   // легенда
-//                                          ui->widget_GraphImpulse->yAxis->setLabel("y");
-        ui->widget_customplotNoise->replot();
-}
 
 void MainWindow::on_listWidget_clicked(const QModelIndex &index)
 {
@@ -476,10 +348,5 @@ void MainWindow::on_listWidget_clicked(const QModelIndex &index)
 
 void MainWindow::on_pushButton_GenerateTime_clicked()
 {
-    GenerateTime(ui->stackedWidget_ParametersOfDistribution->currentIndex()+1);
-}
-
-void MainWindow::on_pushButton_clicked()
-{
-    drawGraphic();
+    GenerateTime(ui->stackedWidget_ParametersOfDistribution->currentIndex()+1);                                               // вызывается функция осущетсвляющая генерацию  - 1 значит распределение Парето
 }

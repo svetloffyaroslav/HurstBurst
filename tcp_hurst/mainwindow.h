@@ -10,21 +10,20 @@
 #include <QIODevice>
 #include <QDataStream>
 #include <QMessageBox>
-#include<QString>
-#include<QHostInfo>
-#include<QHostAddress>
-#include<QNetworkAddressEntry>
+#include <QString>
+#include <QHostInfo>
+#include <QHostAddress>
+#include <QNetworkAddressEntry>
 #include<QVector>
 #include<QDebug>
 #include<QFileDialog>
-#include"math.h"
-#include<random>
-#include<stdio.h>
-#include<stdlib.h>
+#include "math.h"
+#include <random>
+#include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 #include<ctime>
 #include<chrono>
-#include "qcustomplot.h"
 
 namespace Ui
 {
@@ -71,13 +70,6 @@ private slots:
     void on_listWidget_clicked(const QModelIndex &index);
 
     void on_pushButton_GenerateTime_clicked();
-
-    void drawGraphic();
-
-    void drawGraphicNoise();
-
-
-    void on_pushButton_clicked();
 
 private:
     Ui::MainWindow*     ui;
