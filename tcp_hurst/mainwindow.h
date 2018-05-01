@@ -1,3 +1,26 @@
+// ======================================================================
+// mainwidow.cpp
+// ======================================================================
+//           This file is a part of programm Hurst Burst | TCP client v0.1
+// ======================================================================
+//  Author: Svetlov Yaroslav
+//  vk.com : https://vk.com/id52304190
+//
+//  Contact
+//  --------------
+//  Email  : hurst_burst@gmail.com
+//
+//
+//  Description:
+//  This is the main part of programm.There has been described all algorithms
+//  of interface, distributions, and tcp-socket. This programm works like TCP
+//  client.
+//
+//  ---------------
+//  Codec:  UTF-8
+//  Data: 07.02.2018
+// ======================================================================
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -10,25 +33,38 @@
 #include <QIODevice>
 #include <QDataStream>
 #include <QMessageBox>
-#include <QString>
-#include <QHostInfo>
-#include <QHostAddress>
-#include <QNetworkAddressEntry>
+#include<QString>
+#include<QHostInfo>
+#include<QHostAddress>
+#include<QNetworkAddressEntry>
 #include<QVector>
 #include<QDebug>
 #include<QFileDialog>
-#include "math.h"
-#include <random>
-#include <stdio.h>
-#include <stdlib.h>
+#include"math.h"
+#include<random>
+#include<stdio.h>
+#include<stdlib.h>
 #include <iostream>
 #include<ctime>
 #include<chrono>
+#include "qcustomplot.h"
+#include <QLoggingCategory>
+#include "setcolorandsettingsgraph.h"
+
+
+Q_DECLARE_LOGGING_CATEGORY(logDebug)
+Q_DECLARE_LOGGING_CATEGORY(logWarning)
+Q_DECLARE_LOGGING_CATEGORY(logCritical)
+Q_DECLARE_LOGGING_CATEGORY(logPutInfo)
+
+class setcolorandsettingsgraph;
 
 namespace Ui
 {
     class MainWindow;
 }
+
+
 
 class MainWindow : public QMainWindow
 {
@@ -45,6 +81,10 @@ public:
     int i_line;
 
     QVector<float> vector_DeltaTime;
+    QVector<double> vectordouble_HistData;
+    QVector<double> vectordouble_TicksForHist;
+
+    // QVector<float> logspace(double i_min, double i_max, double i_count);
 
 private slots:
     void slot_TcpSocket_OneConnected();
@@ -61,7 +101,7 @@ private slots:
 
     void GenerateTime(int i_WhatGen);
 
-    void on_pushButton_DownloadFromTXT_clicked();
+    // void on_pushButton_DownloadFromTXT_clicked();
 
     void on_pushButton_Transmit_clicked();
 
@@ -71,10 +111,52 @@ private slots:
 
     void on_pushButton_GenerateTime_clicked();
 
+    void drawGraphic();
+
+    void drawGraphicNoise();
+
+    bool SaveGraphicsAsImage(QCustomPlot *widget_Graphic);
+
+    void slot_clickedPointNoise(QMouseEvent* event);
+
+    void slot_clickedHandClose(QMouseEvent*event);
+
+    void on_toolButton_SaveNoise_clicked();
+
+    void on_toolButton_SaveHist_clicked();
+
+    void on_toolButton_SettingsOfHist_clicked();
+
+    void on_toolButton_SettingsOfNoise_clicked();
+
+    void slot_clickedHandOpen(QMouseEvent*event);
+
+    void slot_setColorGraph(QString qstr_BackgroundColor,QString qstr_LineColor, QString qstr_PourColor);
+
+    void slot_setColorHist(QString qstr_BackgroundColor,QString qstr_LineColor,QString qstr_PourColor);
+
+    void on_toolButton_grab_handNoise_toggled(bool checked);
+
+    void on_toolButton_CrossCursorXY_toggled(bool checked);
+
+    void on_toolButton_resetHistogram_clicked();
+
+
+
+
+    void on_pushButton_CalculateHurst_clicked();
+
+    void on_spinBox_CountOfSteps_valueChanged(int arg1);
+
+
+
 private:
     Ui::MainWindow*     ui;
     QTcpSocket*         TcpSocket_One;
     QTimer *            Timer_BetweenPacket;
+    setcolorandsettingsgraph * colorpanel_histogram;
+    setcolorandsettingsgraph * colorpanel_noise;
+       QCPBars *bars_packets;
 };
 
 #endif // MAINWINDOW_H
