@@ -390,39 +390,61 @@ void MainWindow::GenerateTime(int i_WhatGen)
                 break;
     }
     vector_DeltaTime[vector_DeltaTime.size()/2]=X_12;
-    qDebug()<<"[vector_DeltaTime.size()/2] = " <<vector_DeltaTime[vector_DeltaTime.size()/2];
 
 
     // тут должны быть шаги с 3 -по n
-
     int i_val = pow(2,i_Steps);
-    for(int d =1;d<i_Steps;d++)
+    for(int d =1;d<i_Steps;d++)// цикл для всех итераций
     {
        float f_values[(int)pow(2,d)];        // создание массива переменных для вычисления значений на данном шаге
        double disp3 =sqrt(pow(1/pow(2,d),2*d_HurstParametr)*(1-pow(2.0,2*d_HurstParametr-2))*pow(d_StandartDeviation,2));
        std::normal_distribution <float> norm_distrStep(0,disp3);
-       for(int i=0;i<pow(2,d);i++)  // цикл для всех итераций
+       for(int i=0;i<pow(2,d);i++)  //  в нем i - это кол-во переменных генерируемых на этом шаге
        {
+            int i_FindFirstThatIsNotNull;   // создаем переменную, которая укажет номер - в массиве где не ноль
+        // далее устанавливаем для переменной - ближней к нулю
            if(i==0) // если итерация первая
            {
-                int i_FindFirstThatIsNotNull;   // создаем переменную, которая укажет номер - в массиве где не ноль
-                for(int g=0;g<vector_DeltaTime.size();g++)
+                for(int g=0;g<=vector_DeltaTime.size()/2;g++)
                 {
                     if(vector_DeltaTime[g]!=0)
                     {
                         i_FindFirstThatIsNotNull=g; // нашли номер ненулевого массива - выходим
                         for(;;) // бахаем в элемент массива стоящей на половину от того ненулеовго число
                         {
-                            vector_DeltaTime[i_FindFirstThatIsNotNull/2] = 0.5*vector_DeltaTime[i_FindFirstThatIsNotNull]+0.3535*norm_distrStep(generator);
-                            if((vector_DeltaTime[i_FindFirstThatIsNotNull/2] >0)&&(vector_DeltaTime[i_FindFirstThatIsNotNull/2] <1))
-                           i_val--;
-                           break;
+                              vector_DeltaTime[i_FindFirstThatIsNotNull/2] = 0.5*vector_DeltaTime[i_FindFirstThatIsNotNull]+0.3535*norm_distrStep(generator);
+                              if((vector_DeltaTime[i_FindFirstThatIsNotNull/2] >0)&&(vector_DeltaTime[i_FindFirstThatIsNotNull/2] <1))
+                              {
+                                   i_val--;
+                                   break;
+                              }
                         }
                     }
                 }
-          }
-        // тут
-        qDebug()<<"i_val = " <<i_val;
+            }
+          int countFinding = 0;
+          int one,two;
+
+          for(int i=i_FindFirstThatIsNotNull;i<vector_DeltaTime.size();i++)
+           {
+               if(vector_DeltaTime[i]!=0)
+               {
+                   countFinding++;
+                   if(countFinding==1)
+                   {
+                        one= i;
+                   }
+
+                   if(countFinding==2)
+                   {
+                        two =i;
+                        vector_DeltaTime[(two+one+1)/2] = 0.5*(vector_DeltaTime[one]+vector_DeltaTime[two])+0.3535*norm_distrStep(generator);
+                        qDebug()<<"Result = "<<(two+one+1)/2<<"  " <<vector_DeltaTime[(two+one+1)/2];
+                        break;
+                   }
+
+               }
+           }
        }
     }
 
