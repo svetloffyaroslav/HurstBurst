@@ -355,123 +355,55 @@ void MainWindow::GenerateTime(int i_WhatGen)
  }
  else if(i_WhatGen==5)
  {
+
     // инициализируем переменные, которые ввел пользователь
-    double d_StandartDeviation = sqrt(ui->lineEdit_DispersionRMD->text().toDouble());
-    double d_HurstParametr = ui->lineEdit_HurstRMD->text().toDouble();
-    int i_Steps = ui->spinBox_CountOfSteps->value();
-    N = ui->lineEdit_NumbersRMD->text().toInt();
+       double d_StandartDeviation = sqrt(ui->lineEdit_DispersionRMD->text().toDouble());
+       double d_HurstParametr = ui->lineEdit_HurstRMD->text().toDouble();
+       int i_Steps = ui->spinBox_CountOfSteps->value();
+       N = ui->lineEdit_NumbersRMD->text().toInt(); //2^n
+       vector_DeltaTime.resize(N);
+       vector_DeltaTime.fill(0);
 
-    vector_DeltaTime.resize(ui->lineEdit_NumbersRMD->text().toInt());
-    vector_DeltaTime.fill(0);
+       // расчитывем X(0) X(1)
 
-    // шаг 1
-   std::normal_distribution <float> norm_distr(0,d_StandartDeviation);
-   float X_1;
-
-   for(;;)
-   {
-        X_1 = norm_distr(generator);
-        if((X_1>0)&&(X_1<1))    // я так понимаю - это нормировка
-            break;
-   }
-   vector_DeltaTime[vector_DeltaTime.size()-1]=X_1;
-
-   qDebug()<<"[vector_DeltaTime.size()-1] = " <<vector_DeltaTime[vector_DeltaTime.size()-1];
-
-//     шаг 2
-    float X_12;
-    double disp =sqrt(pow(0.5,2*d_HurstParametr)*(1-pow(2.0,2*d_HurstParametr-2))*pow(d_StandartDeviation,2));
-    std::normal_distribution <float> norm_distr_2(0,disp);
-
-    for(;;)
-    {
-        X_12 = 0.5*X_1+0.5*norm_distr_2(generator);
-        if((X_12 >0)&&(X_12 <1))
-                break;
-    }
-    vector_DeltaTime[vector_DeltaTime.size()/2]=X_12;
-
-
-    // тут должны быть шаги с 3 -по n
-    int i_val = pow(2,i_Steps);
-    for(int d =1;d<i_Steps;d++)// цикл для всех итераций
-    {
-       float f_values[(int)pow(2,d)];        // создание массива переменных для вычисления значений на данном шаге
-       double disp3 =sqrt(pow(1/pow(2,d),2*d_HurstParametr)*(1-pow(2.0,2*d_HurstParametr-2))*pow(d_StandartDeviation,2));
-       std::normal_distribution <float> norm_distrStep(0,disp3);
-       for(int i=0;i<pow(2,d);i++)  //  в нем i - это кол-во переменных генерируемых на этом шаге
+      vector_DeltaTime[0] = 0;
+      vector_DeltaTime[vector_DeltaTime.size()-1] = 5;
+       qDebug()<<vector_DeltaTime;
+       for(int i=1;i<i_Steps;i++)
        {
-            int i_FindFirstThatIsNotNull;   // создаем переменную, которая укажет номер - в массиве где не ноль
-        // далее устанавливаем для переменной - ближней к нулю
-           if(i==0) // если итерация первая
+           int colvo_val = pow(2,i); // кол-во переменных при каждом шаге
+           qDebug()<<"==============i==="<<i;
+           for(int s=1;s<colvo_val;s++)
            {
-                for(int g=0;g<=vector_DeltaTime.size()/2;g++)
-                {
-                    if(vector_DeltaTime[g]!=0)
-                    {
-                        i_FindFirstThatIsNotNull=g; // нашли номер ненулевого массива - выходим
-                        for(;;) // бахаем в элемент массива стоящей на половину от того ненулеовго число
-                        {
-                              vector_DeltaTime[i_FindFirstThatIsNotNull/2] = 0.5*vector_DeltaTime[i_FindFirstThatIsNotNull]+0.3535*norm_distrStep(generator);
-                              if((vector_DeltaTime[i_FindFirstThatIsNotNull/2] >0)&&(vector_DeltaTime[i_FindFirstThatIsNotNull/2] <1))
-                              {
-                                   i_val--;
-                                   break;
-                              }
-                        }
-                    }
-                }
-            }
-          int countFinding = 0;
-          int one,two;
-
-          for(int i=i_FindFirstThatIsNotNull;i<vector_DeltaTime.size();i++)
-           {
-               if(vector_DeltaTime[i]!=0)
+             if(vector_DeltaTime[s*N/pow(2,i)]==0)
                {
-                   countFinding++;
-                   if(countFinding==1)
-                   {
-                        one= i;
-                   }
+                 // в большую сторону
+                 float X_more,X_less;
+                 X_less = 0;
+                 X_more = 0;
 
-                   if(countFinding==2)
-                   {
-                        two =i;
-                        vector_DeltaTime[(two+one+1)/2] = 0.5*(vector_DeltaTime[one]+vector_DeltaTime[two])+0.3535*norm_distrStep(generator);
-                        qDebug()<<"Result = "<<(two+one+1)/2<<"  " <<vector_DeltaTime[(two+one+1)/2];
-                        break;
-                   }
+                 for(int p=s*N/pow(2,i);p<=vector_DeltaTime.size()-1;p++)
+                 {
+                     if(vector_DeltaTime[p]!=0)
+                     {
+                         X_more=vector_DeltaTime[p];
+                     }
+                 }
 
+                 // в меньшую сторону
+                 for(int q=s*N/pow(2,i);q>=0;q--)
+                 {
+                     if(vector_DeltaTime[q]!=0)
+                     {
+                       X_less =vector_DeltaTime[q];
+                     }
+                 }
+                 vector_DeltaTime[s*N/pow(2,i)]=X_less+X_more+rand();
+                 qDebug()<<"S==="<<s*N/pow(2,i)<<"  "<<X_less<<"    "<<X_more;
                }
            }
        }
-    }
-
-    // шаг 3
-    float X_14,X_34;
-    double disp3 =sqrt(pow(0.3535,2*d_HurstParametr)*(1-pow(2.0,2*d_HurstParametr-2))*pow(d_StandartDeviation,2));
-    std::normal_distribution <float> norm_distr_3(0,disp3);
-    for(;;)
-    {
-        X_14 = 0.5*X_1+0.3535*norm_distr_3(generator);
-        if((X_14 >0)&&(X_14 <1))
-           break;
-    }
-
-    for(;;)
-    {
-        X_34 = 0.5*(X_12+X_1)+0.3535*norm_distr_3(generator);
-        if((X_34 >0)&&(X_34 <1))
-                break;
-    }
-
-
-
-//     // шаг 3
-//     float X_1div4,X_3div4;
-//     X_1div4 = 0.5*X_1div2+
-
+       qDebug()<<vector_DeltaTime;
 
  }
 
