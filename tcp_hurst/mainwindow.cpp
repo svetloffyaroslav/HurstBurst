@@ -283,11 +283,17 @@ void MainWindow::GenerateTime(int i_WhatGen)
 
     vector_DeltaTime.resize(N);
 
-    const char* outname;
-    outname = "HurstBurst_valuesOfdistribution.txt";
+    char* outname;
+    outname = "HurstBurst_TEXT.txt";
+
+
 
     FILE* OUT_F;
     OUT_F = fopen(outname, "wt");
+    if(OUT_F==NULL)
+    {
+        qDebug()<<"Failed";
+    }
 
     const int range_from = 0;// N(0,1)
     const int range_to = 1;
@@ -356,55 +362,141 @@ void MainWindow::GenerateTime(int i_WhatGen)
  else if(i_WhatGen==5)
  {
 
-    // инициализируем переменные, которые ввел пользователь
-       double d_StandartDeviation = sqrt(ui->lineEdit_DispersionRMD->text().toDouble());
+     /*
+       RMD метод
+     */
+
+       // double d_StandartDeviation = sqrt(ui->lineEdit_DispersionRMD->text().toDouble());
        double d_HurstParametr = ui->lineEdit_HurstRMD->text().toDouble();
-       int i_Steps = ui->spinBox_CountOfSteps->value();
-       N = ui->lineEdit_NumbersRMD->text().toInt(); //2^n
-       vector_DeltaTime.resize(N);
-       vector_DeltaTime.fill(0);
+       int i_Steps = ui->spinBox_CountOfSteps->value(); // кол-во шагов
+       N = ui->lineEdit_NumbersRMD->text().toInt(); // 2^n - кол-во сделанных отсчетов
+
+       vector_DeltaTime.resize(N);  // общий массив теперь становится длиной N
+       vector_DeltaTime.fill(0);    // заполняем его нулями
 
        // расчитывем X(0) X(1)
+      vector_DeltaTime[0] = 0;  // X(0)
+      fprintf(OUT_F,"%f\n",(float)0);
 
-      vector_DeltaTime[0] = 0;
-      vector_DeltaTime[vector_DeltaTime.size()-1] = 5;
-       qDebug()<<vector_DeltaTime;
-       for(int i=1;i<i_Steps;i++)
+      std::normal_distribution <float> norm_distr(0,1);
+      float X_1=0;
+      for(;;)
+      {
+        X_1=norm_distr(generator);  // X(1)
+        if(X_1>0)
+            break;
+      }
+
+      vector_DeltaTime[vector_DeltaTime.size()-1] = X_1;  // X(1)
+      fprintf(OUT_F,"%f\n",vector_DeltaTime[vector_DeltaTime.size()-1]);    // запись в файл
+
+       for(int i=1;i<i_Steps;i++)   // запускаем цикл по шагам
        {
-           int colvo_val = pow(2,i); // кол-во переменных при каждом шаге
-           qDebug()<<"==============i==="<<i;
-           for(int s=1;s<colvo_val;s++)
-           {
-             if(vector_DeltaTime[s*N/pow(2,i)]==0)
-               {
-                 // в большую сторону
-                 float X_more,X_less;
-                 X_less = 0;
-                 X_more = 0;
+           int colvo_val = pow(2,i); // кол-во значений при каждом шаге
 
-                 for(int p=s*N/pow(2,i);p<=vector_DeltaTime.size()-1;p++)
+           for(int s=1;s<colvo_val;s++) // цикл для подсчета всех значений при каждом шаге
+           {
+
+             if(vector_DeltaTime[s*N/pow(2,i)]==0)  // s*N/pow(2,i) - это интересующее нас в массиве место, которое должно быть ровно 0, т.е. в этот элемент массива ничего не должно быть записано
+               {
+                 float X_more,X_less;   // инициализируются переменные
+                 X_less = 0;            // эти переменные являются обязательными для подсчета взятого значения
+                 X_more = 0;            // одно из них- ближайшее расчитанное в большую сторону, другое - ближайшее расчитанное в меньшую сторону
+
+                 // в большую сторону
+                 for(int p=s*N/pow(2,i);p<=vector_DeltaTime.size()-1;p++)   // цикл проверяет массив от текущего значения в большую сторону до конца массиве
                  {
-                     if(vector_DeltaTime[p]!=0)
+                     if(vector_DeltaTime[p]!=0)     // на поиск ближайшего ненулевого значения
                      {
-                         X_more=vector_DeltaTime[p];
+                         X_more=vector_DeltaTime[p];    // и записывает его в переменную
                      }
                  }
 
                  // в меньшую сторону
-                 for(int q=s*N/pow(2,i);q>=0;q--)
+                 for(int q=s*N/pow(2,i);q>=0;q--)       // цикл проверяет массив от текущего значение в меньшую сторону до конца массива
                  {
-                     if(vector_DeltaTime[q]!=0)
+                     if(vector_DeltaTime[q]!=0)         // если ближайшее значение не нулевое
                      {
-                       X_less =vector_DeltaTime[q];
+                       X_less =vector_DeltaTime[q]; // записывай его в перменную
                      }
                  }
-                 vector_DeltaTime[s*N/pow(2,i)]=X_less+X_more+rand();
-                 qDebug()<<"S==="<<s*N/pow(2,i)<<"  "<<X_less<<"    "<<X_more;
-               }
+                 double disp =sqrt(pow(1.0/pow(2.0,i),2.0*d_HurstParametr)+(1.0+pow(2,2*d_HurstParametr-2))*ui->lineEdit_DispersionRMD->text().toDouble());
+                 std::normal_distribution <float> norm_distr_N(0,disp);
+
+                 // vector_DeltaTime[s*N/pow(2,i)]=(X_more+X_less)/2+(1/pow(2,(s+1)/2))*norm_distr_N(generator);
+                 float d;
+                 for(;;)
+                 {
+                   d= norm_distr_N(generator);
+                   if(d>0)
+                       break;
+                 }
+
+                 vector_DeltaTime[s*N/pow(2,i)]=(X_more+X_less)/2+(1.0/sqrt(pow(2.0,i)))*d;
+                 fprintf(OUT_F,"%f\n",vector_DeltaTime[s*N/pow(2,i)]);    // запись в файл
+
+             }
            }
        }
-       qDebug()<<vector_DeltaTime;
 
+ }
+ else if(i_WhatGen==6)
+ {
+     /*
+        SRA-метод
+    */
+     double d_HurstParametrSRA = ui->lineEdit_HurstSRA->text().toDouble();
+     int i_StepsSRA = ui->spinBox_CountOfStepsSRA->value(); // кол-во шагов
+     N = ui->lineEdit_NumbersSRA->text().toInt(); // 2^n - кол-во сделанных отсчетов
+     vector_DeltaTime.resize(N);  // общий массив теперь становится длиной N
+     vector_DeltaTime.fill(0);    // заполняем его нулями
+
+     // расчитывем X(0) X(1)
+    vector_DeltaTime[0] = 0;  // X(0)
+    fprintf(OUT_F,"%f\n",0);
+
+    std::normal_distribution <float> norm_distr(0,1);
+    float X_1=0;
+    X_1=norm_distr(generator);  // X(1)
+
+    vector_DeltaTime[vector_DeltaTime.size()-1] = X_1;  // X(1)
+    for(int i=1;i<i_StepsSRA;i++)   // запускаем цикл по шагам
+    {
+        int colvo_val = pow(2,i); // кол-во значений при каждом шаге
+        // qDebug()<<"-----------------"<<i;
+        for(int s=0;s<=colvo_val;s++) // цикл для подсчета всех значений при каждом шаге
+        {
+           //  qDebug()<<"s = "<<s<<"      "<<s*N/pow(2,i);
+            float X_more,X_less;   // инициализируются переменные
+            X_less = 0;            // эти переменные являются обязательными для подсчета взятого значения
+            X_more = 0;            // одно из них- ближайшее расчитанное в большую сторону, другое - ближайшее расчитанное в меньшую сторону
+
+            // в большую сторону
+            for(int p=s*N/pow(2,i);p<=vector_DeltaTime.size()-1;p++)   // цикл проверяет массив от текущего значения в большую сторону до конца массиве
+            {
+                if(vector_DeltaTime[p]!=0)     // на поиск ближайшего ненулевого значения
+                {
+                    X_more=vector_DeltaTime[p];    // и записывает его в переменную
+                }
+            }
+
+            // в меньшую сторону
+            for(int q=s*N/pow(2,i);q>=0;q--)       // цикл проверяет массив от текущего значение в меньшую сторону до конца массива
+            {
+                if(vector_DeltaTime[q]!=0)         // если ближайшее значение не нулевое
+                {
+                  X_less =vector_DeltaTime[q]; // записывай его в перменную
+                }
+            }
+
+
+            double disp =sqrt(1-pow(2,2*d_HurstParametrSRA-2)*ui->lineEdit_DispersionSRA->text().toDouble()/pow(2,i*2*d_HurstParametrSRA));
+            std::normal_distribution <float> norm_distrSRA_N(0,disp);
+            vector_DeltaTime[s*N/pow(2,i)]=(X_more+X_less)/2+norm_distrSRA_N(generator);
+            fprintf(OUT_F,"%f\n",vector_DeltaTime[s*N/pow(2,i)]);    // запись в файл
+
+        }
+    }
  }
 
  fclose(OUT_F);
@@ -611,15 +703,18 @@ void MainWindow::drawGraphicNoise()
 
 void MainWindow::on_listWidget_clicked(const QModelIndex &index)
 {
+    qDebug()<<"index.row = "<<index.row();
+    qDebug()<<"count widget = "<<ui->stackedWidget_ParametersOfDistribution->count();
     ui->stackedWidget_ParametersOfDistribution->setCurrentIndex(index.row());
-    if(index.row()==4)
-    {
-       ui->spinBox_parametr_N->setEnabled(false);
-    }
-    else if(!ui->spinBox_parametr_N->isEnabled())
-    {
-        ui->spinBox_parametr_N->setEnabled(true);
-    }
+
+//    if(index.row()==4)
+//    {
+//       ui->spinBox_parametr_N->setEnabled(false);
+//    }
+//    else if(!ui->spinBox_parametr_N->isEnabled())
+//    {
+//        ui->spinBox_parametr_N->setEnabled(true);
+//    }
 
 }
 
@@ -730,56 +825,6 @@ void MainWindow::on_toolButton_resetHistogram_clicked()
     drawGraphic();
 }
 
-void MainWindow::on_pushButton_CalculateHurst_clicked()
-{
-    QVector<float> vector_CalculateDeltaTimeNorm;
-    vector_CalculateDeltaTimeNorm.resize(vector_DeltaTime.size());
-    QVectorIterator<float> fvect(vector_DeltaTime);
-    float sum;
-    while(fvect.hasNext())
-    {
-        sum+=fvect.next();
-    }
-    float f_averagevalue= sum/vector_DeltaTime.size();
-
-    for(int i=0;i<vector_DeltaTime.count();i++)
-    {
-      vector_CalculateDeltaTimeNorm[i]=vector_DeltaTime[i]-f_averagevalue;
-    }
-
-     double mlarge =floor(vector_CalculateDeltaTimeNorm.size()/5);
-//   qDebug()<<" logspace(0,log10(mlarge),50) = " <<logspace(0,log10(mlarge),50) ;
-     //QVector <float> s = logspace(1,mlarge,50);
-
-//     std::sort( s.begin(), s.end() );
-//     s.erase( std::unique(s.begin(), s.end() ),s.end() );//remove duplicates
-
-   //  n = length(M);  % вычисляем длину получившегося вектора
-//     int cut_min = ceil(s.size()/10);   // делим полчившуюся длину вектора на 10 - округляем в большую сторону
-//     int cut_max = floor(6*s.size()/10);
-
-//     qDebug()<<cut_min<<"   "<<cut_max;
-}
-
-// проообраз функции из матлаба
-// спизжено отсюда: https://www.codeproject.com/Questions/188926/Generating-a-logarithmically-spaced-numbers
-//QVector<float> MainWindow::logspace(double i_min,double i_max,double i_count)
-//{
-//      double logMin = log10(i_min);
-//      double logMax = log10(i_max);
-//      double delta = (logMax - logMin)/i_count;
-//      double accDelta = 0;
-//      QVector <float> vector_result;
-//      vector_result.resize(i_count);
-//      for (int i = 0;i<i_count; ++i)
-//      {
-//        vector_result[i] = (float)pow(2.721828,logMin + accDelta);
-//        //v[i] = (float) Math.pow(logarithmicBase, logMin + accDelta);
-//        qDebug()<<vector_result[i];
-//        accDelta += delta;// accDelta = delta * i
-//      }
-//      return vector_result;
-//}
 
 void MainWindow::on_spinBox_CountOfSteps_valueChanged(int arg1)
 {
@@ -793,3 +838,16 @@ void MainWindow::on_spinBox_CountOfSteps_valueChanged(int arg1)
     }
 }
 
+
+void MainWindow::on_spinBox_CountOfStepsSRA_valueChanged(int arg1)
+{
+   // тут остановился
+    if(arg1 !=3)
+    {
+      ui->lineEdit_NumbersSRA->setText(QString::number(pow(2,arg1-1)));
+    }
+    else
+    {
+      ui->lineEdit_NumbersSRA->setText(QString::number(arg1-1));
+    }
+}

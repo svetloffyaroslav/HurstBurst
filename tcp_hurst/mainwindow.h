@@ -141,14 +141,11 @@ private slots:
 
     void on_toolButton_resetHistogram_clicked();
 
-
-
-
-    void on_pushButton_CalculateHurst_clicked();
-
     void on_spinBox_CountOfSteps_valueChanged(int arg1);
 
 
+
+    void on_spinBox_CountOfStepsSRA_valueChanged(int arg1);
 
 private:
     Ui::MainWindow*     ui;

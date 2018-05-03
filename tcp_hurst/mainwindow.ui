@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>847</width>
+    <width>716</width>
     <height>611</height>
    </rect>
   </property>
@@ -15,69 +15,6 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_33">
-    <item row="0" column="0">
-     <layout class="QGridLayout" name="gridLayout_21">
-      <item row="0" column="0">
-       <layout class="QGridLayout" name="gridLayout_19">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>IP-адрес:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="lineEdit_IPAdres">
-          <property name="text">
-           <string/>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="0" column="1">
-       <widget class="Line" name="line">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <layout class="QGridLayout" name="gridLayout_20">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Порт</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="lineEdit_Port">
-          <property name="text">
-           <string>20000</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QPushButton" name="pushButton_ConnectOrDisconnect">
-          <property name="text">
-           <string>Подключить</string>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </item>
     <item row="1" column="0">
      <layout class="QGridLayout" name="gridLayout_38">
       <item row="0" column="0">
@@ -123,6 +60,11 @@
            <item>
             <property name="text">
              <string>RMD-метод</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>SRA-метод</string>
             </property>
            </item>
           </widget>
@@ -280,7 +222,7 @@
              <enum>QFrame::Box</enum>
             </property>
             <property name="currentIndex">
-             <number>4</number>
+             <number>5</number>
             </property>
             <widget class="QWidget" name="page">
              <layout class="QGridLayout" name="gridLayout_3">
@@ -571,6 +513,94 @@
               </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="page_6">
+             <widget class="QGroupBox" name="groupBox_11">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>10</y>
+                <width>274</width>
+                <height>126</height>
+               </rect>
+              </property>
+              <property name="title">
+               <string>SRA-метод</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_41">
+               <item row="0" column="0">
+                <layout class="QGridLayout" name="gridLayout_42">
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_16">
+                   <property name="text">
+                    <string>Дисперсия</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_17">
+                   <property name="text">
+                    <string>H</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLabel" name="label_18">
+                   <property name="text">
+                    <string>Итерации</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+               <item row="0" column="1">
+                <layout class="QGridLayout" name="gridLayout_43">
+                 <item row="0" column="0">
+                  <widget class="QLineEdit" name="lineEdit_DispersionSRA">
+                   <property name="text">
+                    <string>1.5</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLineEdit" name="lineEdit_HurstSRA">
+                   <property name="text">
+                    <string>0.8</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <layout class="QGridLayout" name="gridLayout_44">
+                   <item row="0" column="0">
+                    <widget class="QSpinBox" name="spinBox_CountOfStepsSRA">
+                     <property name="minimum">
+                      <number>3</number>
+                     </property>
+                     <property name="maximum">
+                      <number>20</number>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <layout class="QGridLayout" name="gridLayout_45">
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="label_19">
+                       <property name="text">
+                        <string>N = </string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QLineEdit" name="lineEdit_NumbersSRA"/>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </widget>
            </widget>
           </item>
          </layout>
@@ -579,24 +609,68 @@
       </item>
      </layout>
     </item>
-    <item row="1" column="1">
-     <widget class="QGroupBox" name="groupBox_4">
-      <property name="title">
-       <string>Параметр Херста</string>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_8">
-       <item row="0" column="0">
-        <widget class="QLineEdit" name="lineEdit_HurstResult"/>
-       </item>
-       <item row="1" column="0">
-        <widget class="QPushButton" name="pushButton_CalculateHurst">
-         <property name="text">
-          <string>Расчитать</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
+    <item row="0" column="0">
+     <layout class="QGridLayout" name="gridLayout_21">
+      <item row="0" column="0">
+       <layout class="QGridLayout" name="gridLayout_19">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>IP-адрес:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="lineEdit_IPAdres">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="1">
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <layout class="QGridLayout" name="gridLayout_20">
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Порт</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="lineEdit_Port">
+          <property name="text">
+           <string>20000</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QPushButton" name="pushButton_ConnectOrDisconnect">
+          <property name="text">
+           <string>Подключить</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
     </item>
     <item row="2" column="0">
      <widget class="QTabWidget" name="tabWidget">
@@ -1002,7 +1076,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>847</width>
+     <width>716</width>
      <height>18</height>
     </rect>
    </property>

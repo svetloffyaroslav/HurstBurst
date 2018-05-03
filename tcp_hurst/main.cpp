@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     freopen(c_name_log, "w", stdout);
     QApplication a(argc, argv);
 
-     QTest::qExec(new test_gui, argc, argv);
+    QTest::qExec(new test_gui, argc, argv);
 
     QString filePath = "logFile_HurstBurst.txt";
     QFile del(filePath);
