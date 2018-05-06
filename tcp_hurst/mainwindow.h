@@ -65,7 +65,6 @@ namespace Ui
 }
 
 
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -83,6 +82,7 @@ public:
     QVector<float> vector_DeltaTime;
     QVector<double> vectordouble_HistData;
     QVector<double> vectordouble_TicksForHist;
+    QVector<float> vector_FloatAfterDFT;
 
     // QVector<float> logspace(double i_min, double i_max, double i_count);
 
@@ -147,7 +147,11 @@ private slots:
 
     void on_spinBox_CountOfStepsSRA_valueChanged(int arg1);
 
+    void on_pushButton_PeriodogramMethod_clicked();
+
+    void  dft(QVector<float> in);
 private:
+
     Ui::MainWindow*     ui;
     QTcpSocket*         TcpSocket_One;
     QTimer *            Timer_BetweenPacket;

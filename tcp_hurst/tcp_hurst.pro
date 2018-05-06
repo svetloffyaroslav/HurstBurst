@@ -13,6 +13,12 @@ TEMPLATE = app
 RC_FILE = icon.rc
 CONFIG += c++11
 
+INCLUDEPATH +=C:/Qt/Qt5.3.1/Tools/QtCreator/lib/fftw
+
+LIBS +=  C:/Qt/Qt5.3.1/Tools/QtCreator/lib/fftw/libfftw3-3.a\
+         C:/Qt/Qt5.3.1/Tools/QtCreator/lib/fftw/libfftw3f-3.a\
+         C:/Qt/Qt5.3.1/Tools/QtCreator/lib/fftw/libfftw3l-3.a
+
 
 SOURCES += main.cpp\
         mainwindow.cpp \

@@ -23,6 +23,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <fftw3.h>
+#include <fstream>
+#include <complex>
+#include <vector>
+
 #define ER 2.72
 
 
@@ -81,6 +86,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->widget_customplot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 
     on_toolButton_grab_handNoise_toggled(true);
+
+
 
 }
 
@@ -374,9 +381,11 @@ void MainWindow::GenerateTime(int i_WhatGen)
        vector_DeltaTime.resize(N);  // общий массив теперь становится длиной N
        vector_DeltaTime.fill(0);    // заполняем его нулями
 
+
+
+
        // расчитывем X(0) X(1)
       vector_DeltaTime[0] = 0;  // X(0)
-      fprintf(OUT_F,"%f\n",(float)0);
 
       std::normal_distribution <float> norm_distr(0,1);
       float X_1=0;
@@ -388,7 +397,7 @@ void MainWindow::GenerateTime(int i_WhatGen)
       }
 
       vector_DeltaTime[vector_DeltaTime.size()-1] = X_1;  // X(1)
-      fprintf(OUT_F,"%f\n",vector_DeltaTime[vector_DeltaTime.size()-1]);    // запись в файл
+
 
        for(int i=1;i<i_Steps;i++)   // запускаем цикл по шагам
        {
@@ -433,12 +442,21 @@ void MainWindow::GenerateTime(int i_WhatGen)
                  }
 
                  vector_DeltaTime[s*N/pow(2,i)]=(X_more+X_less)/2+(1.0/sqrt(pow(2.0,i)))*d;
-                 fprintf(OUT_F,"%f\n",vector_DeltaTime[s*N/pow(2,i)]);    // запись в файл
-
              }
            }
        }
 
+
+       QFile file("rmd.txt");
+       if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
+       {
+           return;
+       }
+
+       QTextStream outText(&file);
+       for(int i=0;i<vector_DeltaTime.size();++i)
+       outText<<(float)vector_DeltaTime[i]<<"\n";
+            file.close();
  }
  else if(i_WhatGen==6)
  {
@@ -453,7 +471,6 @@ void MainWindow::GenerateTime(int i_WhatGen)
 
      // расчитывем X(0) X(1)
     vector_DeltaTime[0] = 0;  // X(0)
-    fprintf(OUT_F,"%f\n",0);
 
     std::normal_distribution <float> norm_distr(0,1);
     float X_1=0;
@@ -493,10 +510,19 @@ void MainWindow::GenerateTime(int i_WhatGen)
             double disp =sqrt(1-pow(2,2*d_HurstParametrSRA-2)*ui->lineEdit_DispersionSRA->text().toDouble()/pow(2,i*2*d_HurstParametrSRA));
             std::normal_distribution <float> norm_distrSRA_N(0,disp);
             vector_DeltaTime[s*N/pow(2,i)]=(X_more+X_less)/2+norm_distrSRA_N(generator);
-            fprintf(OUT_F,"%f\n",vector_DeltaTime[s*N/pow(2,i)]);    // запись в файл
 
         }
     }
+    QFile file("spa.txt");
+    if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        return;
+    }
+
+    QTextStream outText(&file);
+    for(int i=0;i<vector_DeltaTime.size();++i)
+    outText<<(float)vector_DeltaTime[i]<<"\n";
+    file.close();
  }
 
  fclose(OUT_F);
@@ -703,9 +729,7 @@ void MainWindow::drawGraphicNoise()
 
 void MainWindow::on_listWidget_clicked(const QModelIndex &index)
 {
-    qDebug()<<"index.row = "<<index.row();
-    qDebug()<<"count widget = "<<ui->stackedWidget_ParametersOfDistribution->count();
-    ui->stackedWidget_ParametersOfDistribution->setCurrentIndex(index.row());
+   ui->stackedWidget_ParametersOfDistribution->setCurrentIndex(index.row());
 
 //    if(index.row()==4)
 //    {
@@ -850,4 +874,80 @@ void MainWindow::on_spinBox_CountOfStepsSRA_valueChanged(int arg1)
     {
       ui->lineEdit_NumbersSRA->setText(QString::number(arg1-1));
     }
+}
+
+void MainWindow::on_pushButton_PeriodogramMethod_clicked()
+{
+    // создаем план для библиотеки fftw
+    // setup for graph 4: key axis right, value axis top
+    // will contain parabolically distributed data points with some random perturbanc
+
+    double *in_d;
+    int n = vector_DeltaTime.size();
+
+    in_d = (double*)calloc(n, sizeof(double));;
+
+    for(int i=0;i<vector_DeltaTime.size();i++)
+    {
+            float one = vector_DeltaTime[i];
+            in_d[i]=(double)one;
+            qDebug()<<vector_DeltaTime[i];
+    }
+    fftw_complex *spec;
+    spec = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * n);
+
+   fftw_plan plan =  fftw_plan_dft_r2c_1d(n,in_d,spec,FFTW_ESTIMATE );
+   fftw_execute(plan);
+   fftw_destroy_plan(plan);
+
+   std::ofstream out_s("spess.txt");
+   for(int i=0; i<n; ++i)
+   {
+
+       out_s<<spec[i][0]<<"     "<< spec[i][1]<<"\n";
+   }
+
+
+//   Здесь функции все операции, чтобы построить график
+//    ui->widget_customplotHurst->clearGraphs();
+//    ui->widget_customplotHurst->addGraph(ui->widget_customplotHurst->yAxis, ui->widget_customplotHurst->xAxis);
+//    ui->widget_customplotHurst->graph(0)->setPen(QColor(Qt::red));
+//    ui->widget_customplotHurst->graph(0)->setLineStyle(QCPGraph::lsNone);
+//    ui->widget_customplotHurst->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, 3));
+//    QVector<double> x4(250), y4(250);
+//    for (int i=0; i<250; ++i) // data for graphs 2, 3 and 4
+//    {
+//        x4[i] = i/250.0*100-50;
+//        y4[i] = 0.01*x4[i]*x4[i] + 1.5*(rand()/(double)RAND_MAX-0.5) + 1.5*M_PI;
+//    }
+
+//    ui->widget_customplotHurst->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+//    ui->widget_customplotHurst->graph(0)->setData(x4, y4);
+//    ui->widget_customplotHurst->xAxis->setRange(0, 3.0*M_PI);
+//    ui->widget_customplotHurst->yAxis->setRange(-70, 35);
+//    ui->widget_customplotHurst->yAxis->setTickLength(3, 3);
+//    ui->widget_customplotHurst->yAxis->setSubTickLength(1, 1);
+//    ui->widget_customplotHurst->replot();
+
+}
+
+void MainWindow::dft(QVector<float> in)
+{
+
+    /*
+
+for (int k = 0; k < n; k++) {  // For each output element
+        double sumreal = 0;
+        double sumimag = 0;
+        for (int t = 0; t < n; t++) {  // For each input element
+            double angle = 2 * Math.PI * t * k / n;
+            sumreal +=  inreal[t] * Math.cos(angle) + inimag[t] * Math.sin(angle);
+            sumimag += -inreal[t] * Math.sin(angle) + inimag[t] * Math.cos(angle);
+        }
+        outreal[k] = sumreal;
+        outimag[k] = sumimag;
+    }
+
+
+*/
 }
