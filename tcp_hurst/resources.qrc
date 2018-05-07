@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/Images">
+        <file>Images/desiresplash.png</file>
+        <file>Images/save.png</file>
+        <file>Images/settings.png</file>
+        <file>Images/clean.png</file>
+        <file>Images/grab_hand.png</file>
+        <file>Images/cursor-cross.png</file>
+        <file>Images/reset.png</file>
+    </qresource>
+</RCC>
