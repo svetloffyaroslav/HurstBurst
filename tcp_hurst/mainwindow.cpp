@@ -27,6 +27,9 @@
 #include <fstream>
 #include <complex>
 #include <vector>
+#include <math.h>
+
+#include <mgl2/qt.h>
 
 #define ER 2.72
 
@@ -447,7 +450,7 @@ void MainWindow::GenerateTime(int i_WhatGen)
        }
 
 
-       QFile file("rmd.txt");
+       QFile file("rmd_1.txt");
        if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
        {
            return;
@@ -891,43 +894,86 @@ void MainWindow::on_pushButton_PeriodogramMethod_clicked()
     {
             float one = vector_DeltaTime[i];
             in_d[i]=(double)one;
-            qDebug()<<vector_DeltaTime[i];
     }
     fftw_complex *spec;
     spec = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * n);
+    qDebug()<<" n= " <<n;
 
    fftw_plan plan =  fftw_plan_dft_r2c_1d(n,in_d,spec,FFTW_ESTIMATE );
    fftw_execute(plan);
    fftw_destroy_plan(plan);
 
+   double *d_AbsVal;
+   d_AbsVal =(double*) malloc(sizeof(double)*n);
+
+
    std::ofstream out_s("spess.txt");
+   double s= 1;
+   qDebug()<<"S = "<<(2*M_PI*n);
    for(int i=0; i<n; ++i)
    {
-
        out_s<<spec[i][0]<<"     "<< spec[i][1]<<"\n";
+       // calculate abs val
+       double one = sqrt(pow((double)spec[i][0],2)+ pow((double)spec[i][1],2));
+       d_AbsVal[i]=(double)one/(2*M_PI*n);
+        qDebug()<<"abs = "<<d_AbsVal[i];
    }
 
 
-//   Здесь функции все операции, чтобы построить график
-//    ui->widget_customplotHurst->clearGraphs();
-//    ui->widget_customplotHurst->addGraph(ui->widget_customplotHurst->yAxis, ui->widget_customplotHurst->xAxis);
-//    ui->widget_customplotHurst->graph(0)->setPen(QColor(Qt::red));
-//    ui->widget_customplotHurst->graph(0)->setLineStyle(QCPGraph::lsNone);
-//    ui->widget_customplotHurst->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, 3));
-//    QVector<double> x4(250), y4(250);
-//    for (int i=0; i<250; ++i) // data for graphs 2, 3 and 4
-//    {
-//        x4[i] = i/250.0*100-50;
-//        y4[i] = 0.01*x4[i]*x4[i] + 1.5*(rand()/(double)RAND_MAX-0.5) + 1.5*M_PI;
-//    }
+    QVector<double> P;
+    P.clear();
+    P.resize(floor(n/2)+1);
 
-//    ui->widget_customplotHurst->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
-//    ui->widget_customplotHurst->graph(0)->setData(x4, y4);
-//    ui->widget_customplotHurst->xAxis->setRange(0, 3.0*M_PI);
-//    ui->widget_customplotHurst->yAxis->setRange(-70, 35);
-//    ui->widget_customplotHurst->yAxis->setTickLength(3, 3);
-//    ui->widget_customplotHurst->yAxis->setSubTickLength(1, 1);
-//    ui->widget_customplotHurst->replot();
+
+    for(int i=0;i<floor(n/2)+1;i++)
+    {
+        P[i]=d_AbsVal[i];
+        qDebug()<<"P[i]=" <<P[i];
+    }
+
+
+////   x = log10((pi/n)*[2:floor(0.5*n)]);
+////   y = log10(P(2:floor(0.5*n)));
+
+    QVector <double> x,y;
+    x.resize((int)floor(0.5*n));
+    y.resize((int)floor(0.5*n));
+    for(int i=2;i<floor(0.5*n);i++)
+    {
+        x[i-2]= log10((M_PI/n)*i);
+        y[i-2]=log10(P[i]);
+
+    }
+
+    double minY = y[0],maxY = y[0];
+    for(int i = 0;i<y.size();i++)
+    {
+        if (y[i]<minY) minY = y[i];
+        if (y[i]>maxY) maxY = y[i];
+    }
+
+
+////   Здесь функции все операции, чтобы построить график
+    ui->widget_customplotHurst->clearGraphs();
+    ui->widget_customplotHurst->addGraph(ui->widget_customplotHurst->xAxis, ui->widget_customplotHurst->yAxis);
+    ui->widget_customplotHurst->graph(0)->setPen(QColor(Qt::red));
+    ui->widget_customplotHurst->graph(0)->setLineStyle(QCPGraph::lsNone);
+    ui->widget_customplotHurst->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, 3));
+////    QVector<double> x4(250), y4(250);
+////    for (int i=0; i<250; ++i) // data for graphs 2, 3 and 4
+////    {
+////        x4[i] = i/250.0*100-50;
+////        y4[i] = 0.01*x4[i]*x4[i] + 1.5*(rand()/(double)RAND_MAX-0.5) + 1.5*M_PI;
+////    }
+
+
+    ui->widget_customplotHurst->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
+    ui->widget_customplotHurst->graph(0)->setData(x, y);
+    ui->widget_customplotHurst->xAxis->setRange(x[0],x[x.size()-1]);
+    ui->widget_customplotHurst->yAxis->setRange(minY,maxY);
+    ui->widget_customplotHurst->yAxis->setTickLength(3, 3);
+    ui->widget_customplotHurst->yAxis->setSubTickLength(1, 1);
+    ui->widget_customplotHurst->replot();
 
 }
 

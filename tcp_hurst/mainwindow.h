@@ -84,6 +84,8 @@ public:
     QVector<double> vectordouble_TicksForHist;
     QVector<float> vector_FloatAfterDFT;
 
+
+
     // QVector<float> logspace(double i_min, double i_max, double i_count);
 
 private slots:
@@ -97,7 +99,6 @@ private slots:
     void on_action_SaveTime_triggered();
 
     void StartTimerDelta(int i);
-
 
     void GenerateTime(int i_WhatGen);
 
@@ -157,7 +158,7 @@ private:
     QTimer *            Timer_BetweenPacket;
     setcolorandsettingsgraph * colorpanel_histogram;
     setcolorandsettingsgraph * colorpanel_noise;
-       QCPBars *bars_packets;
+    QCPBars *bars_packets;
 };
 
 #endif // MAINWINDOW_H
