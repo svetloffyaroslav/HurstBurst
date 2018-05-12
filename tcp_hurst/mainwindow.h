@@ -151,6 +151,14 @@ private slots:
     void on_pushButton_PeriodogramMethod_clicked();
 
     void  dft(QVector<float> in);
+
+//    bool polynomialfit(int obs, int degree,double *dx, double *dy, double *store);
+    int polyfit(const double* const dependentValues,
+                                 const double* const independentValues,
+                                 unsigned int        countOfElements,
+                                 unsigned int        order,
+                                 double*             coefficients);
+
 private:
 
     Ui::MainWindow*     ui;

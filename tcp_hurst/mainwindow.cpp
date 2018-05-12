@@ -29,7 +29,14 @@
 #include <vector>
 #include <math.h>
 
-#include <mgl2/qt.h>
+// #include <mgl2/qt.h>
+ #include <gsl/gsl_multifit.h>
+ #include <gsl/gsl_fit.h>
+#include<gsl/gsl_poly.h>
+
+
+
+
 
 #define ER 2.72
 
@@ -916,7 +923,7 @@ void MainWindow::on_pushButton_PeriodogramMethod_clicked()
        // calculate abs val
        double one = sqrt(pow((double)spec[i][0],2)+ pow((double)spec[i][1],2));
        d_AbsVal[i]=(double)one/(2*M_PI*n);
-        qDebug()<<"abs = "<<d_AbsVal[i];
+        // qDebug()<<"abs = "<<d_AbsVal[i];
    }
 
 
@@ -928,7 +935,7 @@ void MainWindow::on_pushButton_PeriodogramMethod_clicked()
     for(int i=0;i<floor(n/2)+1;i++)
     {
         P[i]=d_AbsVal[i];
-        qDebug()<<"P[i]=" <<P[i];
+        // qDebug()<<"P[i]=" <<P[i];
     }
 
 
@@ -953,19 +960,19 @@ void MainWindow::on_pushButton_PeriodogramMethod_clicked()
     }
 
 
+
+  //  double *coeff;
+  // polynomialfit(x.size(),1,x.data(),y.data(),coeff);
+  // qDebug()<<"coeff = " <<coeff;
+  // gsl_poly_complex_eval();
+
+
 ////   Здесь функции все операции, чтобы построить график
     ui->widget_customplotHurst->clearGraphs();
     ui->widget_customplotHurst->addGraph(ui->widget_customplotHurst->xAxis, ui->widget_customplotHurst->yAxis);
     ui->widget_customplotHurst->graph(0)->setPen(QColor(Qt::red));
     ui->widget_customplotHurst->graph(0)->setLineStyle(QCPGraph::lsNone);
     ui->widget_customplotHurst->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, 3));
-////    QVector<double> x4(250), y4(250);
-////    for (int i=0; i<250; ++i) // data for graphs 2, 3 and 4
-////    {
-////        x4[i] = i/250.0*100-50;
-////        y4[i] = 0.01*x4[i]*x4[i] + 1.5*(rand()/(double)RAND_MAX-0.5) + 1.5*M_PI;
-////    }
-
 
     ui->widget_customplotHurst->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
     ui->widget_customplotHurst->graph(0)->setData(x, y);
@@ -973,7 +980,35 @@ void MainWindow::on_pushButton_PeriodogramMethod_clicked()
     ui->widget_customplotHurst->yAxis->setRange(minY,maxY);
     ui->widget_customplotHurst->yAxis->setTickLength(3, 3);
     ui->widget_customplotHurst->yAxis->setSubTickLength(1, 1);
+
+
+
+    x.resize(floor(x.size()/5));
+    y.resize(floor(y.size()/5));
+    double coeff[2];
+    // coeff = new double[2];
+    polyfit(x.data(),y.data(),x.size(),1,coeff);
+   // тут
+    QVector <double> Yfit;
+    Yfit.resize(x.size());
+   for(int i=0;i<x.size();i++)
+   {
+       Yfit[i]=  gsl_poly_eval(coeff,2,x[i]);
+   }
+   double H= (1-(Yfit[x.size()-1]-Yfit[0])/(x[x.size()-1]-x[0]))/2;
+   ui->lineEdit_HurstResult->setText(QString::number(H));
+   double minYfit = y[0],maxYfit = y[0];
+   for(int i = 0;i<Yfit.size();i++)
+   {
+       if (Yfit[i]<minYfit) minYfit = Yfit[i];
+       if (Yfit[i]>maxYfit) maxYfit = Yfit[i];
+   }
+
+    ui->widget_customplotHurst->addGraph();
+    ui->widget_customplotHurst->graph(1)->setData(x,Yfit);
+    ui->widget_customplotHurst->graph(1)->setPen(QPen(Qt::blue));
     ui->widget_customplotHurst->replot();
+
 
 }
 
@@ -993,7 +1028,173 @@ for (int k = 0; k < n; k++) {  // For each output element
         outreal[k] = sumreal;
         outimag[k] = sumimag;
     }
-
-
 */
 }
+
+//bool MainWindow::polynomialfit(int obs, int degree,
+//                                    double *dx, double *dy, double *store) /* n, p */
+//{
+//        gsl_multifit_linear_workspace *ws;
+//        gsl_matrix *cov, *X;
+//        gsl_vector *y, *c;
+//        double chisq;
+
+//        int i, j;
+
+//                           X = gsl_matrix_alloc(obs, degree);
+//                           y = gsl_vector_alloc(obs);
+//                           c = gsl_vector_alloc(degree);
+//                           cov = gsl_matrix_alloc(degree, degree);
+
+//                           for(i=0; i < obs; i++) {
+//                             for(j=0; j < degree; j++) {
+//                               gsl_matrix_set(X, i, j, pow(dx[i], j));
+//                             }
+//                             gsl_vector_set(y, i, dy[i]);
+//                           }
+
+//                           ws = gsl_multifit_linear_alloc(obs, degree);
+//                           gsl_multifit_linear(X, y, c, cov, &chisq, ws);
+
+//                           /* store result ... */
+//                           for(i=0; i < degree; i++)
+//                           {
+//                             store[i] = gsl_vector_get(c, i);
+//                           }
+
+//       gsl_multifit_linear_free(ws);
+//       gsl_matrix_free(X);
+//       gsl_matrix_free(cov);
+//       gsl_vector_free(y);
+//       gsl_vector_free(c);
+//       return true; /* we do not "analyse" the result (cov matrix mainly)
+//                                   to know if the fit is "good" */
+//}
+int MainWindow::polyfit(const double* const dependentValues,
+                             const double* const independentValues,
+                             unsigned int        countOfElements,
+                             unsigned int        order,
+                             double*             coefficients)
+                 {
+                     // Declarations...
+                     // ----------------------------------
+                     enum {maxOrder = 5};
+
+                     double B[maxOrder+1] = {0.0f};
+                     double P[((maxOrder+1) * 2)+1] = {0.0f};
+                     double A[(maxOrder + 1)*2*(maxOrder + 1)] = {0.0f};
+
+                     double x, y, powx;
+
+                     unsigned int ii, jj, kk;
+
+                     // Verify initial conditions....
+                     // ----------------------------------
+
+                     // This method requires that the countOfElements >
+                     // (order+1)
+                     if (countOfElements <= order)
+                         return -1;
+
+                     // This method has imposed an arbitrary bound of
+                     // order <= maxOrder.  Increase maxOrder if necessary.
+                     if (order > maxOrder)
+                         return -1;
+
+                     // Begin Code...
+                     // ----------------------------------
+
+                     // Identify the column vector
+                     for (ii = 0; ii < countOfElements; ii++)
+                     {
+                         x    = dependentValues[ii];
+                         y    = independentValues[ii];
+                         powx = 1;
+
+                         for (jj = 0; jj < (order + 1); jj++)
+                         {
+                             B[jj] = B[jj] + (y * powx);
+                             powx  = powx * x;
+                         }
+                     }
+
+                     // Initialize the PowX array
+                     P[0] = countOfElements;
+
+                     // Compute the sum of the Powers of X
+                     for (ii = 0; ii < countOfElements; ii++)
+                     {
+                         x    = dependentValues[ii];
+                         powx = dependentValues[ii];
+
+                         for (jj = 1; jj < ((2 * (order + 1)) + 1); jj++)
+                         {
+                             P[jj] = P[jj] + powx;
+                             powx  = powx * x;
+                         }
+                     }
+
+                     // Initialize the reduction matrix
+                     //
+                     for (ii = 0; ii < (order + 1); ii++)
+                     {
+                         for (jj = 0; jj < (order + 1); jj++)
+                         {
+                             A[(ii * (2 * (order + 1))) + jj] = P[ii+jj];
+                         }
+
+                         A[(ii*(2 * (order + 1))) + (ii + (order + 1))] = 1;
+                     }
+
+                     // Move the Identity matrix portion of the redux matrix
+                     // to the left side (find the inverse of the left side
+                     // of the redux matrix
+                     for (ii = 0; ii < (order + 1); ii++)
+                     {
+                         x = A[(ii * (2 * (order + 1))) + ii];
+                         if (x != 0)
+                         {
+                             for (kk = 0; kk < (2 * (order + 1)); kk++)
+                             {
+                                 A[(ii * (2 * (order + 1))) + kk] =
+                                     A[(ii * (2 * (order + 1))) + kk] / x;
+                             }
+
+                             for (jj = 0; jj < (order + 1); jj++)
+                             {
+                                 if ((jj - ii) != 0)
+                                 {
+                                     y = A[(jj * (2 * (order + 1))) + ii];
+                                     for (kk = 0; kk < (2 * (order + 1)); kk++)
+                                     {
+                                         A[(jj * (2 * (order + 1))) + kk] =
+                                             A[(jj * (2 * (order + 1))) + kk] -
+                                             y * A[(ii * (2 * (order + 1))) + kk];
+                                     }
+                                 }
+                             }
+                         }
+                         else
+                         {
+                             // Cannot work with singular matrices
+                             return -1;
+                         }
+                     }
+
+                     // Calculate and Identify the coefficients
+                     for (ii = 0; ii < (order + 1); ii++)
+                     {
+                         for (jj = 0; jj < (order + 1); jj++)
+                         {
+                             x = 0;
+                             for (kk = 0; kk < (order + 1); kk++)
+                             {
+                                 x = x + (A[(ii * (2 * (order + 1))) + (kk + (order + 1))] *
+                                     B[kk]);
+                             }
+                             coefficients[ii] = x;
+                         }
+                     }
+
+                     return 0;
+                 }

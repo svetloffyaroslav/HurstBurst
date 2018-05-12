@@ -13,9 +13,12 @@ TEMPLATE = app
 RC_FILE = icon.rc
 CONFIG += c++11
 
+
 INCLUDEPATH +=C:/Qt/Qt5.3.1/Tools/QtCreator/lib/fftw\
               C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/include\
-              C:/Qt/Qt5.3.1/Tools/QtCreator/lib/gsl-2.2.1-shared/include
+              C:/Qt/Qt5.3.1/Tools/QtCreator/lib/gsl-2.2.1-shared/include\
+              C:/Qt/Qt5.3.1/Tools/QtCreator/lib/gsl-2.2.1-shared/include/gsl\
+              C:/Qt/Qt5.3.1/Tools/QtCreator/lib/gsl-2.2.1-shared/bin
 
 
 LIBS +=  C:/Qt/Qt5.3.1/Tools/QtCreator/lib/fftw/libfftw3-3.a\
@@ -35,10 +38,9 @@ LIBS +=  C:/Qt/Qt5.3.1/Tools/QtCreator/lib/fftw/libfftw3-3.a\
         C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl-glut.dll.a\
         C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl.a\
         C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl.dll.a\
-        #C:/Qt/Qt5.3.1/Tools/QtCreator/lib/gsl-2.2.1-shared/lib/libgsl.la\
         C:/Qt/Qt5.3.1/Tools/QtCreator/lib/gsl-2.2.1-shared/lib/libgsl.dll.a\
-        #C:/Qt/Qt5.3.1/Tools/QtCreator/lib/gsl-2.2.1-shared/lib/libgslcblas.la\
-        C:/Qt/Qt5.3.1/Tools/QtCreator/lib/gsl-2.2.1-shared/lib/libgslcblas.dll.a
+        C:/Qt/Qt5.3.1/Tools/QtCreator/lib/gsl-2.2.1-shared/lib/libgslcblas.dll.a\
+
 
 # LIBS += -LC:/gsl-1.11/bin -llibgsl-0 -llibgslcblas-0
 # LIBS += -L/usr/local/lib example.o -lgsl -lgslcblas -lm
@@ -49,11 +51,13 @@ SOURCES += main.cpp\
     qcustomplot.cpp \
     test_gui.cpp \
     setcolorandsettingsgraph.cpp
+    # polyfitgsl.cpp
 
 HEADERS  += mainwindow.h \
     qcustomplot.h \
     test_gui.h \
     setcolorandsettingsgraph.h
+    #polyfitgsl.h
 
 FORMS    += mainwindow.ui \
     setcolorandsettingsgraph.ui
