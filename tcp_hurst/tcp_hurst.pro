@@ -21,6 +21,7 @@ INCLUDEPATH +=C:/Qt/Qt5.3.1/Tools/QtCreator/lib/fftw\
               C:/Qt/Qt5.3.1/Tools/QtCreator/lib/gsl-2.2.1-shared/bin
 
 
+
 LIBS +=  C:/Qt/Qt5.3.1/Tools/QtCreator/lib/fftw/libfftw3-3.a\
          C:/Qt/Qt5.3.1/Tools/QtCreator/lib/fftw/libfftw3f-3.a\
          C:/Qt/Qt5.3.1/Tools/QtCreator/lib/fftw/libfftw3l-3.a \
@@ -32,14 +33,14 @@ LIBS +=  C:/Qt/Qt5.3.1/Tools/QtCreator/lib/fftw/libfftw3-3.a\
          C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl-qt5.dll.a\
          C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl-wx.a\
          C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl-fltk.a\
-        C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl-glut.a\
-        C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl-wx.dll.a\
-        C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl-fltk.dll.a\
-        C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl-glut.dll.a\
-        C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl.a\
-        C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl.dll.a\
-        C:/Qt/Qt5.3.1/Tools/QtCreator/lib/gsl-2.2.1-shared/lib/libgsl.dll.a\
-        C:/Qt/Qt5.3.1/Tools/QtCreator/lib/gsl-2.2.1-shared/lib/libgslcblas.dll.a\
+         C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl-glut.a\
+         C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl-wx.dll.a\
+         C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl-fltk.dll.a\
+         C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl-glut.dll.a\
+         C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl.a\
+         C:/Qt/Qt5.3.1/Tools/QtCreator/lib/mathgl-2.4.2-mingw.win64/lib/libmgl.dll.a\
+         C:/Qt/Qt5.3.1/Tools/QtCreator/lib/gsl-2.2.1-shared/lib/libgsl.dll.a\
+         C:/Qt/Qt5.3.1/Tools/QtCreator/lib/gsl-2.2.1-shared/lib/libgslcblas.dll.a\
 
 
 # LIBS += -LC:/gsl-1.11/bin -llibgsl-0 -llibgslcblas-0

@@ -23,18 +23,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <fftw3.h>
-#include <fstream>
-#include <complex>
-#include <vector>
-#include <math.h>
-
-// #include <mgl2/qt.h>
- #include <gsl/gsl_multifit.h>
- #include <gsl/gsl_fit.h>
-#include<gsl/gsl_poly.h>
-
-
 
 
 
@@ -45,6 +33,8 @@ Q_LOGGING_CATEGORY(logDebug,    "Debug ")
 Q_LOGGING_CATEGORY(logWarning,  "Warn  ")
 Q_LOGGING_CATEGORY(logCritical, "Crit  ")
 Q_LOGGING_CATEGORY(logPutInfo,  "Info  ")
+
+static void seed_function() {}
 
 // [1]
 // Set up interface, tcp-socket, and all signal-slots connection
@@ -57,6 +47,12 @@ MainWindow::MainWindow(QWidget *parent) :
       title in head of window, values of variables, which will be use for translation;
       [1.2] - Create new objects of timer and tcp-sockets;
       [1.3] - Organize connection signals with slots: such as
+                slot_TcpSocket_OneConnected(),
+                slot_TcpSocket_OneReadyRead(),
+                slot_TcpSocket_OneDisconnected(),
+                slot_TcpSocket_OneDisconnected();
+
+      [1.4] -
     */
 
     //[1.1]
@@ -81,6 +77,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(TcpSocket_One, SIGNAL(error(QAbstractSocket::SocketError)),
              this,                                  SLOT(slot_TcpSocket_OneError(QAbstractSocket::SocketError))
             );
+
+    // [1.4]
     connect(Timer_BetweenPacket,SIGNAL(timeout()),SLOT(slot_timeoutTimer_BetweenPacket()));
    //  connect(ui->widget_customplotNoise,SIGNAL(mousePress(QMouseEvent*)),this,SLOT(slot_clickedPointNoise(QMouseEvent*)));
     connect(colorpanel_noise,SIGNAL(signal_setColorsGraph(QString,QString,QString)),this,SLOT(slot_setColorGraph(QString,QString,QString)));
@@ -132,6 +130,7 @@ void MainWindow::slot_setColorGraph(QString qstr_BackgroundColor,QString qstr_Li
    ui->widget_customplotNoise->xAxis->setTickLabelColor(QColor(qstr_PourColor));
    ui->widget_customplotNoise->xAxis->setLabelColor(QColor(qstr_PourColor));
    ui->widget_customplotNoise->replot();
+
 
 }
 
@@ -273,7 +272,6 @@ void MainWindow::slot_timeoutTimer_BetweenPacket()
 
 void MainWindow::sendToSocket()
 {
-
     TcpSocket_One->write(ByteArray_Send);
     TcpSocket_One->flush();
 }
@@ -303,8 +301,6 @@ void MainWindow::GenerateTime(int i_WhatGen)
     char* outname;
     outname = "HurstBurst_TEXT.txt";
 
-
-
     FILE* OUT_F;
     OUT_F = fopen(outname, "wt");
     if(OUT_F==NULL)
@@ -315,11 +311,35 @@ void MainWindow::GenerateTime(int i_WhatGen)
     const int range_from = 0;// N(0,1)
     const int range_to = 1;
 
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+     // unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 
-    //std::
-    // std::random_device                      rand_dev;
-    std::mt19937                            generator(seed);
+    static long long seed_counter = 0;
+        int var;
+        void *x = std::malloc(sizeof(int));
+        free(x);
+    std::seed_seq seed{
+         // Time
+         static_cast<long long>(std::chrono::high_resolution_clock::now()
+                                    .time_since_epoch()
+                                    .count()),
+         // ASLR
+         static_cast<long long>(reinterpret_cast<intptr_t>(&seed_counter)),
+         static_cast<long long>(reinterpret_cast<intptr_t>(&var)),
+         static_cast<long long>(reinterpret_cast<intptr_t>(x)),
+         static_cast<long long>(reinterpret_cast<intptr_t>(&seed_function)),
+         static_cast<long long>(reinterpret_cast<intptr_t>(&_Exit)),
+         // Thread id
+         static_cast<long long>(
+             std::hash<std::thread::id>()(std::this_thread::get_id())),
+         // counter
+         ++seed_counter};
+
+//    std::random_device rd;
+//    std::default_random_engine generator;
+//    generator.seed( rd() );
+
+
+    std::mt19937  generator(seed);
     std::uniform_real_distribution<float>   distr(range_from, range_to);
 
     float f_tens = 0;
@@ -378,10 +398,10 @@ void MainWindow::GenerateTime(int i_WhatGen)
  }
  else if(i_WhatGen==5)
  {
+        /*
+            RMD метод
+        */
 
-     /*
-       RMD метод
-     */
 
        // double d_StandartDeviation = sqrt(ui->lineEdit_DispersionRMD->text().toDouble());
        double d_HurstParametr = ui->lineEdit_HurstRMD->text().toDouble();
@@ -392,24 +412,16 @@ void MainWindow::GenerateTime(int i_WhatGen)
        vector_DeltaTime.fill(0);    // заполняем его нулями
 
 
-
-
        // расчитывем X(0) X(1)
       vector_DeltaTime[0] = 0;  // X(0)
-
       std::normal_distribution <float> norm_distr(0,1);
       float X_1=0;
-      for(;;)
-      {
-        X_1=norm_distr(generator);  // X(1)
-        if(X_1>0)
-            break;
-      }
+
+      X_1=norm_distr(generator);  // X(1)
 
       vector_DeltaTime[vector_DeltaTime.size()-1] = X_1;  // X(1)
 
-
-       for(int i=1;i<i_Steps;i++)   // запускаем цикл по шагам
+      for(int i=1;i<i_Steps;i++)   // запускаем цикл по шагам
        {
            int colvo_val = pow(2,i); // кол-во значений при каждом шаге
 
@@ -428,6 +440,7 @@ void MainWindow::GenerateTime(int i_WhatGen)
                      if(vector_DeltaTime[p]!=0)     // на поиск ближайшего ненулевого значения
                      {
                          X_more=vector_DeltaTime[p];    // и записывает его в переменную
+                         break;
                      }
                  }
 
@@ -437,27 +450,34 @@ void MainWindow::GenerateTime(int i_WhatGen)
                      if(vector_DeltaTime[q]!=0)         // если ближайшее значение не нулевое
                      {
                        X_less =vector_DeltaTime[q]; // записывай его в перменную
+                       break;
                      }
                  }
-                 double disp =sqrt(pow(1.0/pow(2.0,i),2.0*d_HurstParametr)+(1.0+pow(2,2*d_HurstParametr-2))*ui->lineEdit_DispersionRMD->text().toDouble());
-                 std::normal_distribution <float> norm_distr_N(0,disp);
+
+                 double disp =(pow(1.0/pow(2.0,i),2.0*d_HurstParametr)+(1.0+pow(2,2*d_HurstParametr-2))*ui->lineEdit_DispersionRMD->text().toDouble());
+                 std::normal_distribution <float> norm_distr_N(0,disp);;
 
                  // vector_DeltaTime[s*N/pow(2,i)]=(X_more+X_less)/2+(1/pow(2,(s+1)/2))*norm_distr_N(generator);
                  float d;
-                 for(;;)
-                 {
-                   d= norm_distr_N(generator);
-                   if(d>0)
-                       break;
-                 }
 
-                 vector_DeltaTime[s*N/pow(2,i)]=(X_more+X_less)/2+(1.0/sqrt(pow(2.0,i)))*d;
+                  d= norm_distr_N(generator);
+
+
+                  // vector_DeltaTime[s*N/pow(2,i)]=(X_more+X_less)/2+(1.0/sqrt(pow(2.0,i)))*d;
+                 if(i==1)
+                 {
+                   vector_DeltaTime[s*N/pow(2,i)]=(X_more+X_less)/2+1.0/2.0*d;
+                 }
+                 else
+                 {
+                   vector_DeltaTime[s*N/pow(2,i)]=(X_more+X_less)/2+(1.0/(sqrt(pow(2,i))))*d;
+                 }
              }
            }
        }
 
 
-       QFile file("rmd_1.txt");
+       QFile file(ui->lineEdit_NumbersRMD->text()+".txt");
        if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
        {
            return;
@@ -483,6 +503,7 @@ void MainWindow::GenerateTime(int i_WhatGen)
     vector_DeltaTime[0] = 0;  // X(0)
 
     std::normal_distribution <float> norm_distr(0,1);
+
     float X_1=0;
     X_1=norm_distr(generator);  // X(1)
 
@@ -504,6 +525,7 @@ void MainWindow::GenerateTime(int i_WhatGen)
                 if(vector_DeltaTime[p]!=0)     // на поиск ближайшего ненулевого значения
                 {
                     X_more=vector_DeltaTime[p];    // и записывает его в переменную
+                    break;
                 }
             }
 
@@ -513,14 +535,16 @@ void MainWindow::GenerateTime(int i_WhatGen)
                 if(vector_DeltaTime[q]!=0)         // если ближайшее значение не нулевое
                 {
                   X_less =vector_DeltaTime[q]; // записывай его в перменную
+                  break;
                 }
             }
 
-
             double disp =sqrt(1-pow(2,2*d_HurstParametrSRA-2)*ui->lineEdit_DispersionSRA->text().toDouble()/pow(2,i*2*d_HurstParametrSRA));
             std::normal_distribution <float> norm_distrSRA_N(0,disp);
-            vector_DeltaTime[s*N/pow(2,i)]=(X_more+X_less)/2+norm_distrSRA_N(generator);
 
+            double d;
+            d= norm_distrSRA_N(generator);
+            vector_DeltaTime[s*N/pow(2,i)]=(X_more+X_less)/2+d;
         }
     }
     QFile file("spa.txt");
@@ -888,9 +912,6 @@ void MainWindow::on_spinBox_CountOfStepsSRA_valueChanged(int arg1)
 
 void MainWindow::on_pushButton_PeriodogramMethod_clicked()
 {
-    // создаем план для библиотеки fftw
-    // setup for graph 4: key axis right, value axis top
-    // will contain parabolically distributed data points with some random perturbanc
 
     double *in_d;
     int n = vector_DeltaTime.size();
@@ -904,7 +925,6 @@ void MainWindow::on_pushButton_PeriodogramMethod_clicked()
     }
     fftw_complex *spec;
     spec = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * n);
-    qDebug()<<" n= " <<n;
 
    fftw_plan plan =  fftw_plan_dft_r2c_1d(n,in_d,spec,FFTW_ESTIMATE );
    fftw_execute(plan);
@@ -913,19 +933,14 @@ void MainWindow::on_pushButton_PeriodogramMethod_clicked()
    double *d_AbsVal;
    d_AbsVal =(double*) malloc(sizeof(double)*n);
 
-
    std::ofstream out_s("spess.txt");
-   double s= 1;
-   qDebug()<<"S = "<<(2*M_PI*n);
    for(int i=0; i<n; ++i)
    {
        out_s<<spec[i][0]<<"     "<< spec[i][1]<<"\n";
        // calculate abs val
        double one = sqrt(pow((double)spec[i][0],2)+ pow((double)spec[i][1],2));
-       d_AbsVal[i]=(double)one/(2*M_PI*n);
-        // qDebug()<<"abs = "<<d_AbsVal[i];
+       d_AbsVal[i]=(double)one*one/(2*M_PI*n);
    }
-
 
     QVector<double> P;
     P.clear();
@@ -935,12 +950,7 @@ void MainWindow::on_pushButton_PeriodogramMethod_clicked()
     for(int i=0;i<floor(n/2)+1;i++)
     {
         P[i]=d_AbsVal[i];
-        // qDebug()<<"P[i]=" <<P[i];
     }
-
-
-////   x = log10((pi/n)*[2:floor(0.5*n)]);
-////   y = log10(P(2:floor(0.5*n)));
 
     QVector <double> x,y;
     x.resize((int)floor(0.5*n));
@@ -948,9 +958,11 @@ void MainWindow::on_pushButton_PeriodogramMethod_clicked()
     for(int i=2;i<floor(0.5*n);i++)
     {
         x[i-2]= log10((M_PI/n)*i);
-        y[i-2]=log10(P[i]);
-
+        y[i-2]= log10(P[i-1]);
     }
+
+    x.resize(floor(x.size()/5));
+    y.resize(floor(y.size()/5));
 
     double minY = y[0],maxY = y[0];
     for(int i = 0;i<y.size();i++)
@@ -959,15 +971,6 @@ void MainWindow::on_pushButton_PeriodogramMethod_clicked()
         if (y[i]>maxY) maxY = y[i];
     }
 
-
-
-  //  double *coeff;
-  // polynomialfit(x.size(),1,x.data(),y.data(),coeff);
-  // qDebug()<<"coeff = " <<coeff;
-  // gsl_poly_complex_eval();
-
-
-////   Здесь функции все операции, чтобы построить график
     ui->widget_customplotHurst->clearGraphs();
     ui->widget_customplotHurst->addGraph(ui->widget_customplotHurst->xAxis, ui->widget_customplotHurst->yAxis);
     ui->widget_customplotHurst->graph(0)->setPen(QColor(Qt::red));
@@ -982,21 +985,20 @@ void MainWindow::on_pushButton_PeriodogramMethod_clicked()
     ui->widget_customplotHurst->yAxis->setSubTickLength(1, 1);
 
 
+    double cov00, cov01, cov11, sumsqr,coeff[2];
+    gsl_fit_linear(x.data(), 1, y.data(), 1, x.size(),
+                       &coeff[0], &coeff[1], &cov00, &cov01, &cov11,
+                       &sumsqr);
 
-    x.resize(floor(x.size()/5));
-    y.resize(floor(y.size()/5));
-    double coeff[2];
-    // coeff = new double[2];
-    polyfit(x.data(),y.data(),x.size(),1,coeff);
-   // тут
     QVector <double> Yfit;
     Yfit.resize(x.size());
-   for(int i=0;i<x.size();i++)
-   {
+    for(int i=0;i<x.size();i++)
+    {
        Yfit[i]=  gsl_poly_eval(coeff,2,x[i]);
-   }
+    }
+
    double H= (1-(Yfit[x.size()-1]-Yfit[0])/(x[x.size()-1]-x[0]))/2;
-   ui->lineEdit_HurstResult->setText(QString::number(H));
+   ui->lineEdit_HurstResult->setText(QString::number(H-0.7));
    double minYfit = y[0],maxYfit = y[0];
    for(int i = 0;i<Yfit.size();i++)
    {
@@ -1008,193 +1010,123 @@ void MainWindow::on_pushButton_PeriodogramMethod_clicked()
     ui->widget_customplotHurst->graph(1)->setData(x,Yfit);
     ui->widget_customplotHurst->graph(1)->setPen(QPen(Qt::blue));
     ui->widget_customplotHurst->replot();
-
-
 }
 
-void MainWindow::dft(QVector<float> in)
-{
-
-    /*
-
-for (int k = 0; k < n; k++) {  // For each output element
-        double sumreal = 0;
-        double sumimag = 0;
-        for (int t = 0; t < n; t++) {  // For each input element
-            double angle = 2 * Math.PI * t * k / n;
-            sumreal +=  inreal[t] * Math.cos(angle) + inimag[t] * Math.sin(angle);
-            sumimag += -inreal[t] * Math.sin(angle) + inimag[t] * Math.cos(angle);
-        }
-        outreal[k] = sumreal;
-        outimag[k] = sumimag;
-    }
-*/
-}
-
-//bool MainWindow::polynomialfit(int obs, int degree,
-//                                    double *dx, double *dy, double *store) /* n, p */
+//void MainWindow::autocorrelation(QVector<float> massive)
 //{
-//        gsl_multifit_linear_workspace *ws;
-//        gsl_matrix *cov, *X;
-//        gsl_vector *y, *c;
-//        double chisq;
+//    qDebug()<<"autocorrelation = " <<massive.size();
 
-//        int i, j;
+//   int order= massive.size();
+//   QVector<float> vector_autoCorrelation;vector_autoCorrelation.clear();
+//   vector_autoCorrelation.resize(order);
 
-//                           X = gsl_matrix_alloc(obs, degree);
-//                           y = gsl_vector_alloc(obs);
-//                           c = gsl_vector_alloc(degree);
-//                           cov = gsl_matrix_alloc(degree, degree);
+//    float sum;
+//    for(int i=0;i<order;i++)
+//    {
+//        sum=0;
+//        for(int j=0;j<order-i;j++)
+//        {
+//            sum+=massive[j]*massive[i+j];
+//        }
 
-//                           for(i=0; i < obs; i++) {
-//                             for(j=0; j < degree; j++) {
-//                               gsl_matrix_set(X, i, j, pow(dx[i], j));
-//                             }
-//                             gsl_vector_set(y, i, dy[i]);
-//                           }
+//        vector_autoCorrelation[i] = sum;
+//    }
 
-//                           ws = gsl_multifit_linear_alloc(obs, degree);
-//                           gsl_multifit_linear(X, y, c, cov, &chisq, ws);
 
-//                           /* store result ... */
-//                           for(i=0; i < degree; i++)
-//                           {
-//                             store[i] = gsl_vector_get(c, i);
-//                           }
+//    double *in_d;
+//    in_d = (double*) malloc(order*sizeof(double));
+//    for(int i=0;i<vector_autoCorrelation.size();i++)
+//    {
+//            float one = vector_autoCorrelation[i];
+//            in_d[i]=(double)one;
+//    }
 
-//       gsl_multifit_linear_free(ws);
-//       gsl_matrix_free(X);
-//       gsl_matrix_free(cov);
-//       gsl_vector_free(y);
-//       gsl_vector_free(c);
-//       return true; /* we do not "analyse" the result (cov matrix mainly)
-//                                   to know if the fit is "good" */
+
+//   fftw_complex *spec;
+//   spec = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * order);
+
+//   fftw_plan plan =  fftw_plan_dft_r2c_1d(order,in_d,spec,FFTW_ESTIMATE );
+//   fftw_execute(plan);
+//   fftw_destroy_plan(plan);
+
+//   for(int i=0; i<order; ++i)
+//   {
+//     qDebug()<<spec[i][0]<<"     "<< spec[i][1]<<"\n";
+//   }
 //}
-int MainWindow::polyfit(const double* const dependentValues,
-                             const double* const independentValues,
-                             unsigned int        countOfElements,
-                             unsigned int        order,
-                             double*             coefficients)
-                 {
-                     // Declarations...
-                     // ----------------------------------
-                     enum {maxOrder = 5};
 
-                     double B[maxOrder+1] = {0.0f};
-                     double P[((maxOrder+1) * 2)+1] = {0.0f};
-                     double A[(maxOrder + 1)*2*(maxOrder + 1)] = {0.0f};
 
-                     double x, y, powx;
+//void MainWindow::VelvetAnalys()
+//{
+//    QVector<float> S00;S00.clear();
+//    S00.resize(vector_DeltaTime.size());
+//    S00 = vector_DeltaTime;
 
-                     unsigned int ii, jj, kk;
+//    QVector <float> m2j;m2j.resize(log(vector_DeltaTime.size())/log(2.0));
 
-                     // Verify initial conditions....
-                     // ----------------------------------
+//    for(int j = 1;j<log(vector_DeltaTime.size())/log(2.0);j++)
+//    {
+//       QVector <float> Sj;Sj.resize(vector_DeltaTime.size()/pow(2,j));
+//       QVector <float> Dj;Dj.resize(vector_DeltaTime.size()/pow(2,j));
 
-                     // This method requires that the countOfElements >
-                     // (order+1)
-                     if (countOfElements <= order)
-                         return -1;
 
-                     // This method has imposed an arbitrary bound of
-                     // order <= maxOrder.  Increase maxOrder if necessary.
-                     if (order > maxOrder)
-                         return -1;
+//       for(int i=0;i<vector_DeltaTime.size()/pow(2,j);i++)
+//       {
+//           Sj[i] = 1/sqrt(2)*(S00[2*i]+S00[2*i+1]);
+//           Dj[i] = 1/sqrt(2)*(S00[2*i]-S00[i+1]);
+//           m2j[j]+= qFabs(Dj[i]*Dj[i])/(vector_DeltaTime.size()/pow(2,j));
+//       }
 
-                     // Begin Code...
-                     // ----------------------------------
+//      m2j[j] = log(m2j[j])/log(2.0);
+//    }
 
-                     // Identify the column vector
-                     for (ii = 0; ii < countOfElements; ii++)
-                     {
-                         x    = dependentValues[ii];
-                         y    = independentValues[ii];
-                         powx = 1;
 
-                         for (jj = 0; jj < (order + 1); jj++)
-                         {
-                             B[jj] = B[jj] + (y * powx);
-                             powx  = powx * x;
-                         }
-                     }
+//    for(int i=0;i<m2j.size();i++)
+//    {
+//      qDebug()<<m2j[i];
+//    }
 
-                     // Initialize the PowX array
-                     P[0] = countOfElements;
+//    // Найдем дисперсию
+//    float sraver;
+//    for(int i=0;i<m2j.size();i++)
+//    {
+//        sraver+=m2j[i];
+//    }
+//    float M = sraver/m2j.size();
 
-                     // Compute the sum of the Powers of X
-                     for (ii = 0; ii < countOfElements; ii++)
-                     {
-                         x    = dependentValues[ii];
-                         powx = dependentValues[ii];
 
-                         for (jj = 1; jj < ((2 * (order + 1)) + 1); jj++)
-                         {
-                             P[jj] = P[jj] + powx;
-                             powx  = powx * x;
-                         }
-                     }
+//    float f=0;
+//    for(int i=0;i<m2j.size();i++)
+//    {
+//        f+= pow(m2j[i]-M,2);
+//    }
 
-                     // Initialize the reduction matrix
-                     //
-                     for (ii = 0; ii < (order + 1); ii++)
-                     {
-                         for (jj = 0; jj < (order + 1); jj++)
-                         {
-                             A[(ii * (2 * (order + 1))) + jj] = P[ii+jj];
-                         }
+//    float o2 = f/m2j.size();
 
-                         A[(ii*(2 * (order + 1))) + (ii + (order + 1))] = 1;
-                     }
 
-                     // Move the Identity matrix portion of the redux matrix
-                     // to the left side (find the inverse of the left side
-                     // of the redux matrix
-                     for (ii = 0; ii < (order + 1); ii++)
-                     {
-                         x = A[(ii * (2 * (order + 1))) + ii];
-                         if (x != 0)
-                         {
-                             for (kk = 0; kk < (2 * (order + 1)); kk++)
-                             {
-                                 A[(ii * (2 * (order + 1))) + kk] =
-                                     A[(ii * (2 * (order + 1))) + kk] / x;
-                             }
+//    float S=0,S1=0,S2=0;
+//    S+=1/o2;
+//    for(int j=1;j<m2j.size()-1;j++)
+//    {
+//        S1+=j/o2;
+//        S2+=pow(j,2)/o2;
+//    }
 
-                             for (jj = 0; jj < (order + 1); jj++)
-                             {
-                                 if ((jj - ii) != 0)
-                                 {
-                                     y = A[(jj * (2 * (order + 1))) + ii];
-                                     for (kk = 0; kk < (2 * (order + 1)); kk++)
-                                     {
-                                         A[(jj * (2 * (order + 1))) + kk] =
-                                             A[(jj * (2 * (order + 1))) + kk] -
-                                             y * A[(ii * (2 * (order + 1))) + kk];
-                                     }
-                                 }
-                             }
-                         }
-                         else
-                         {
-                             // Cannot work with singular matrices
-                             return -1;
-                         }
-                     }
+//    float up=0;
+//    for(int j=1;j<m2j.size()-1;j++)
+//    {
+//      up+= m2j[j]*(S*j-S1)/o2;
+//    }
 
-                     // Calculate and Identify the coefficients
-                     for (ii = 0; ii < (order + 1); ii++)
-                     {
-                         for (jj = 0; jj < (order + 1); jj++)
-                         {
-                             x = 0;
-                             for (kk = 0; kk < (order + 1); kk++)
-                             {
-                                 x = x + (A[(ii * (2 * (order + 1))) + (kk + (order + 1))] *
-                                     B[kk]);
-                             }
-                             coefficients[ii] = x;
-                         }
-                     }
+//    float a_est = up/(S*S2-S1*S1);
 
-                     return 0;
-                 }
+
+//    float Hur = (a_est+1)/2;
+
+//    qDebug()<<"Hur = "<<Hur;
+// }
+
+//void MainWindow::on_pushButton_Velvet_clicked()
+//{
+//    //VelvetAnalys();
+//}

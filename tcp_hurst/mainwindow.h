@@ -33,23 +33,36 @@
 #include <QIODevice>
 #include <QDataStream>
 #include <QMessageBox>
-#include<QString>
-#include<QHostInfo>
-#include<QHostAddress>
-#include<QNetworkAddressEntry>
-#include<QVector>
-#include<QDebug>
-#include<QFileDialog>
-#include"math.h"
-#include<random>
-#include<stdio.h>
-#include<stdlib.h>
+#include <QString>
+#include <QHostInfo>
+#include <QHostAddress>
+#include <QNetworkAddressEntry>
+#include <QVector>
+#include <QDebug>
+#include <QFileDialog>
+#include <random>
+#include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
-#include<ctime>
-#include<chrono>
+#include <ctime>
+#include <chrono>
 #include "qcustomplot.h"
 #include <QLoggingCategory>
 #include "setcolorandsettingsgraph.h"
+#include <fftw3.h>
+#include <fstream>
+#include <complex>
+#include <vector>
+#include <math.h>
+#include <QtMath>
+#include <gsl/gsl_multifit.h>
+#include <gsl/gsl_fit.h>
+#include <gsl/gsl_poly.h>
+#include <iostream>
+#include <random>
+#include <thread>
+#include <utility>
+
 
 
 Q_DECLARE_LOGGING_CATEGORY(logDebug)
@@ -150,14 +163,11 @@ private slots:
 
     void on_pushButton_PeriodogramMethod_clicked();
 
-    void  dft(QVector<float> in);
+   // void autocorrelation(QVector<float> massive);
 
-//    bool polynomialfit(int obs, int degree,double *dx, double *dy, double *store);
-    int polyfit(const double* const dependentValues,
-                                 const double* const independentValues,
-                                 unsigned int        countOfElements,
-                                 unsigned int        order,
-                                 double*             coefficients);
+    // void VelvetAnalys();
+
+    //void on_pushButton_Velvet_clicked();
 
 private:
 
