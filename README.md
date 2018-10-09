@@ -6,7 +6,8 @@ It uses [client-server model](http://qt-doc.ru/model-klient-server.html), so in 
 + server part;
 + client part.
 
-Both programms are used to organize connection between two computers, and after than start to send traffic with different parameters.  
+Both programms are used to organize connection between two computers, and after than start to send traffic with different parameters. 
+![picture-one-scheme](https://github.com/svetloffyaroslav/HurstBurst/blob/master/tcp_hurst/Images/scheme.png)
 
 ### Server part
 ---
@@ -20,5 +21,15 @@ Both programms are used to organize connection between two computers, and after 
 
 
 ### Build with
+---
+
+### Authors
+---
+* Svetlov Yaroslav - [git](https://github.com/svetloffyaroslav),[twitter](https://twitter.com/whensunraises)
+### License
+
+### Acknowledgments
+---
+* [QCustomPlot](https://www.qcustomplot.com/index.php/introduction);
 
 
